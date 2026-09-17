@@ -13,7 +13,7 @@ twice — once for the thought, once for the response — to label each as
 Usage:
     python baselines/simple_llm_judge/run_simple_llm_judge_fewshot.py \
         --model azure_gpt4o \
-        --input data/models/deepseek_r1/dataset_with_labels.json \
+        --input data/singleturn/deepseek_r1/dataset_with_labels.json \
         --output results/baselines/simple_llm_judge_fewshot_azure_gpt4o.json
 
     # Run with parallel workers (default 4):

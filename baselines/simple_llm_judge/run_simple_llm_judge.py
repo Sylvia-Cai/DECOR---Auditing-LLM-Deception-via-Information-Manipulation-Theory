@@ -12,7 +12,7 @@ Supports all 11 model presets via --model (see config.LLM_PRESETS).
 Usage:
     python baselines/simple_llm_judge/run_simple_llm_judge.py \\
         --model azure_gpt4o \\
-        --input data/models/deepseek_r1/dataset_with_labels.json \\
+        --input data/singleturn/deepseek_r1/dataset_with_labels.json \\
         --output results/baselines/simple_llm_judge_azure_gpt4o.json
 
     # Run with parallel workers (default 4):

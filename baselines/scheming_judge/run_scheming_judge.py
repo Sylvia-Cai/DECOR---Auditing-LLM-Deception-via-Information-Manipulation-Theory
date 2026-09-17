@@ -21,7 +21,7 @@ same evaluation scripts (replace "label" → numeric "score").
 Usage:
     python baselines/scheming_judge/run_scheming_judge.py \\
         --model azure_gpt4o \\
-        --input data/models/deepseek_r1/dataset_with_labels.json \\
+        --input data/singleturn/deepseek_r1/dataset_with_labels.json \\
         --output results/baselines/scheming_judge_azure_gpt4o.json
 
     # Parallel workers:

@@ -20,7 +20,7 @@ Usage:
 
     python baselines/cot_red_handed/run_cot_red_handed.py \\
         --model azure_gpt4o --workers 4 \\
-        --input data/models/deepseek_r1/dataset_with_labels.json \\
+        --input data/singleturn/deepseek_r1/dataset_with_labels.json \\
         --output results/baselines/cot_red_handed/cot_red_handed_azure_gpt4o_results.json
 """
 

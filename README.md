@@ -46,7 +46,7 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   ├── parse_open_deception.py             # Parse raw OpenDeception-C187 GPT-4o transcripts
 │   └── eval_multiturn_open_deception.py    # Multi-turn AUROC evaluation (DECOR vs. one baseline)
 ├── data/
-│   ├── models/                                 # One dataset per audited model (150 prompts x 4
+│   ├── singleturn/                             # One dataset per audited model (150 prompts x 4
 │   │   │                                          pressure-framing (L2) variants = 600 scenarios)
 │   │   ├── deepseek_r1/dataset_with_labels.json    # The paper's primary dataset
 │   │   ├── gpt4o/dataset_with_labels.json          # Human-annotated GT extension to 3 more models
@@ -57,7 +57,7 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   │       # no separate no-label variant to keep in sync.
 │   └── open_deception/
 │       ├── OpenDeception-C187/                    # Raw source (Wu et al., 2025), trimmed to just
-│       │   ├── data/English/GPT-4o/                   # the 50 GPT-4o transcripts the paper uses
+│       │   ├── transcripts/                           # the 50 GPT-4o transcripts the paper uses
 │       │   └── examples.py                            # Per-scenario goal text (read as plain text)
 │       └── open_deception_gpt4o_en.json           # generated — see "Multi-turn" below, not checked in
 ├── config.py                   # LLM presets and API configuration
@@ -142,7 +142,7 @@ Multi-turn counterparts (`baselines/<family>/run_*_open_deception_round.py`) run
 
 ### Human-annotated ground truth for additional models
 
-`data/models/{gpt4o,claude_sonnet46,qwen25_7b}/` extend the human-annotated ground truth beyond the paper's DeepSeek-R1 set.
+`data/singleturn/{gpt4o,claude_sonnet46,qwen25_7b}/` extend the human-annotated ground truth beyond the paper's DeepSeek-R1 set.
 
 ```bash
 python scripts/run_imt.py --dataset human_eval --all

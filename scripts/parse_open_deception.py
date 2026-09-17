@@ -2,7 +2,7 @@
 
 Usage:
     python scripts/parse_open_deception.py --input \
-        "data/open_deception/OpenDeception-C187/data/English/GPT-4o/cheat_success/Fake Recruitment Assistant Privacy9.txt"
+        "data/open_deception/OpenDeception-C187/transcripts/cheat_success/Fake Recruitment Assistant Privacy9.txt"
 
     # Regenerate the curated dataset every other script/workflow reads by default
     # (data/open_deception/open_deception_gpt4o_en.json — not checked in, since it

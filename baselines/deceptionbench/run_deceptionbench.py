@@ -13,7 +13,7 @@ Input/output format is aligned with other blackbox baselines.
 Usage:
     python baselines/deceptionbench/run_deceptionbench.py \
         --model azure_gpt4o \
-        --input data/models/deepseek_r1/dataset_with_labels.json \
+        --input data/singleturn/deepseek_r1/dataset_with_labels.json \
         --output results/baselines/deceptionbench_azure_gpt4o.json
 
     # Parallel workers:
