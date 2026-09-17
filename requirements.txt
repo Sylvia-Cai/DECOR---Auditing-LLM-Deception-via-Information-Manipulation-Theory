@@ -1,0 +1,12 @@
+numpy
+openai
+anthropic>=0.40.0
+google-genai
+python-dotenv
+pandas
+openpyxl
+scikit-learn
+tqdm
+pyyaml
+regex
+inspect-ai
