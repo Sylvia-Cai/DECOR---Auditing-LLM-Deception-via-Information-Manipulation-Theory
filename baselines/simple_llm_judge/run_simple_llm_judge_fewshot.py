@@ -36,7 +36,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
 
 from config import get_llm_config
-from llm_interface.factory import create_llm
+from llm_interface import create_llm
 
 # ── Default paths ──────────────────────────────────────────────────────────────
 from project_paths import DEEPSEEK_DATASET as DEFAULT_INPUT

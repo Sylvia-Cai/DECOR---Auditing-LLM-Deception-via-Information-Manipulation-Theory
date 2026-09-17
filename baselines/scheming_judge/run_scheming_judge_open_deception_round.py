@@ -18,7 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from config import DEFAULT_LLM_PRESET, get_llm_config  # noqa: E402
-from llm_interface.factory import create_llm  # noqa: E402
+from llm_interface import create_llm  # noqa: E402
 from baselines.scheming_judge.run_scheming_judge import (  # noqa: E402
     _PROMPT_BODY,
     _extract_score,
