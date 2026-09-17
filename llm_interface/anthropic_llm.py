@@ -5,17 +5,24 @@ from .base_llm import BaseLLM
 
 class AnthropicLLM(BaseLLM):
     """
-    LLM interface for the official (direct, non-Azure) Anthropic API.
+    LLM interface for Anthropic Claude models: the official (direct) Anthropic
+    API, or Claude hosted on Azure AI Foundry.
 
-    Designed as the vendor-neutral reference implementation for Claude models —
-    works with a plain console.anthropic.com API key, no Azure account needed.
-    Use this instead of AzureAnthropicLLM when reproducing without access to
-    the authors' Azure AI Foundry deployment.
+    Reference implementation for paper reproducibility — works with a plain
+    console.anthropic.com API key by default (no Azure account needed).
+
+    Dispatch:
+        If ``azure_endpoint`` is set, uses the ``AnthropicFoundry`` client
+        (Azure AI Foundry deployments — requires ``deployment_name`` too).
+        Otherwise uses the direct ``Anthropic`` client with ``model_name``.
 
     Config keys:
-        api_key               — Anthropic API key
-        model_name            — Model identifier (e.g. "claude-sonnet-4-6")
-        max_completion_tokens — Output token budget (default 3000)
+        api_key                — Anthropic (or Azure Foundry) API key
+        model_name              — Model identifier for direct API calls
+                                  (e.g. "claude-sonnet-4-6")
+        azure_endpoint          — Full Foundry endpoint URL (Azure only)
+        deployment_name         — Model deployment name (Azure only)
+        max_completion_tokens   — Output token budget (default 3000)
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -31,11 +38,21 @@ class AnthropicLLM(BaseLLM):
 
         if not self.config.get("api_key"):
             raise ValueError("AnthropicLLM requires 'api_key' in config.")
-        if not self.config.get("model_name"):
-            raise ValueError("AnthropicLLM requires 'model_name' in config.")
 
-        self.client = anthropic.Anthropic(api_key=self.config["api_key"])
-        self.model_name = self.config["model_name"]
+        if self.config.get("azure_endpoint"):
+            if not self.config.get("deployment_name"):
+                raise ValueError("AnthropicLLM (Azure Foundry) requires 'deployment_name' in config.")
+            self.client = anthropic.AnthropicFoundry(
+                base_url=self.config["azure_endpoint"],
+                api_key=self.config["api_key"],
+            )
+            self.model_name = self.config["deployment_name"]
+        else:
+            if not self.config.get("model_name"):
+                raise ValueError("AnthropicLLM requires 'model_name' in config.")
+            self.client = anthropic.Anthropic(api_key=self.config["api_key"])
+            self.model_name = self.config["model_name"]
+
         self.default_max_tokens = self.config.get("max_completion_tokens", 3000)
 
     def generate(self, prompt: str, **kwargs) -> str:

@@ -47,7 +47,7 @@ AZURE_O3_CONFIG = {
     **_AZURE_BASE,
     "deployment_name": "o3",
     "model_name": "o3",
-    "skip_temperature": True,   # AzureOpenAILLM will omit temperature for this model
+    "skip_temperature": True,   # OpenAILLM will omit temperature for this model
 }
 
 # o4-mini is a reasoning model: temperature must be omitted from the API call.
@@ -129,6 +129,9 @@ AZURE_DEEPSEEK_CONFIG = {
     "model_name": "DeepSeek-V4-Flash-0731",
     "temperature": DEFAULT_TEMPERATURE,
     "max_completion_tokens": DEFAULT_MAX_TOKENS,
+    # This Foundry deployment doesn't understand the newer max_completion_tokens/
+    # top_p params; falls back to the classic Chat Completions param shape.
+    "legacy_max_tokens": True,
 }
 
 AZURE_DEEPSEEK_V31_CONFIG = {
