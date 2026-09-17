@@ -1,7 +1,7 @@
 """
 scripts/convert_human_eval_xlsx.py
 ===================================
-Convert data/human_eval_final_gt_202609_gpt_claude_qwen.xlsx into per-target-model
+Convert data/human_eval/human_eval_final_gt_202609_gpt_claude_qwen.xlsx into per-target-model
 datasets that follow the exact same schema as deepseek_dataset_150_{no_label,with_labels}.json,
 so the IMT audit workflow (workflows/imt_audit_workflow.py) and eval pipeline
 (workflows/imt_scores.py) can be reused unchanged.
@@ -15,8 +15,8 @@ l2_type becomes one entry in that item's "results" dict — mirroring the deepse
 dataset's item = {topic, dimension, question, groundtruth, goal, results: {l2_type: {...}}}.
 
 Output (per target model):
-    data/human_eval_models/<slug>_dataset_no_label.json    (for feeding into the audit workflow)
-    data/human_eval_models/<slug>_dataset_with_labels.json (adds "human_eval" ground-truth labels)
+    data/human_eval/models/<slug>_dataset_no_label.json    (for feeding into the audit workflow)
+    data/human_eval/models/<slug>_dataset_with_labels.json (adds "human_eval" ground-truth labels)
 
 Usage:
     python scripts/convert_human_eval_xlsx.py

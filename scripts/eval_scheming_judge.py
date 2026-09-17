@@ -45,7 +45,8 @@ from sklearn.metrics import (
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-DEFAULT_LABELS  = ROOT / "data" / "deepseek_dataset_150_with_labels.json"
+from project_paths import DEFAULT_DATASET_HUMAN_EVAL as DEFAULT_LABELS
+
 DEFAULT_IN_DIR  = ROOT / "results" / "baselines"
 DEFAULT_OUT_DIR = ROOT / "results" / "eval" / "baselines" / "scheming_judge"
 

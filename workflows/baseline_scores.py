@@ -34,9 +34,9 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
+from project_paths import BASELINE_RESULTS_DIR, DEFAULT_DATASET_HUMAN_EVAL as DEFAULT_LABELS
+
 SIDES = ("thought", "response")
-BASELINE_RESULTS_DIR = Path(__file__).resolve().parents[1] / "results" / "baselines"
-DEFAULT_LABELS       = Path(__file__).resolve().parents[1] / "data" / "deepseek_dataset_150_with_labels.json"
 
 
 # ── File discovery ─────────────────────────────────────────────────────────────

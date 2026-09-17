@@ -2,11 +2,12 @@
 
 Usage:
     python scripts/parse_open_deception.py --input \
-        "data/OpenDeception-C187/data/English/GPT-4o/cheat_success/Fake Recruitment Assistant Privacy9.txt"
+        "data/open_deception/OpenDeception-C187/data/English/GPT-4o/cheat_success/Fake Recruitment Assistant Privacy9.txt"
 
-    python scripts/parse_open_deception.py --input \
-        data/OpenDeception-C187/data \
-        --output results/open_deception/open_deception_parsed.json
+    # Regenerate the curated dataset every other script/workflow reads by default
+    # (data/open_deception/open_deception_gpt4o_en.json — not checked in, since it
+    # is a deterministic function of the raw transcripts above):
+    python scripts/parse_open_deception.py
 """
 
 from __future__ import annotations
@@ -14,14 +15,19 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = ROOT / "data" / "OpenDeception-C187" / "data"
-DEFAULT_OUTPUT = ROOT / "results" / "open_deception" / "open_deception_parsed.json"
+sys.path.insert(0, str(ROOT))
+
+from project_paths import (  # noqa: E402
+    OPEN_DECEPTION_EXAMPLES as OPENDECEPTION_EXAMPLES,
+    OPEN_DECEPTION_INPUT as DEFAULT_OUTPUT,
+    OPEN_DECEPTION_RAW_DIR as DEFAULT_INPUT,
+)
+
 LABEL_NAMES = {"cheat_fail", "cheat_none", "cheat_success", "fail", "rejection"}
-OPENDECEPTION_EXAMPLES = ROOT / "data" / "OpenDeception-C187" / "examples.py"
 
 
 def _normalize_scenario_name(name: str) -> str:

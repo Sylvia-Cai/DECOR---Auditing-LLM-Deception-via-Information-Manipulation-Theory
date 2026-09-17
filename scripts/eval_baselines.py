@@ -1,7 +1,14 @@
 """
 scripts/eval_baselines.py
 ==========================
-Evaluate baseline result files: same metric set as eval_imt.py for fair comparison.
+Evaluate binary-label baseline result files (Zero-shot, Few-shot,
+DeceptionBench): same metric set as eval_imt.py for fair comparison.
+
+NOT for CoT Red-Handed or Constitutional Monitor: those output continuous
+suspicion scores rather than binary labels, so this generic evaluator would
+silently round them to 0/1 instead of using the paper's actual weighted-average
+methodology. Use scripts/eval_cot_red_handed.py and scripts/eval_scheming_judge.py
+for those two — this script skips the "cot_red_handed" family for that reason.
 
 Usage:
     # List available baseline families
@@ -37,6 +44,10 @@ from workflows.baseline_scores import (
 
 DEFAULT_MODEL = "azure_gpt4o"
 OUT_BASE = EVAL_RESULTS_DIR / "baselines"
+
+# Continuous-score baselines with their own dedicated, paper-faithful evaluator
+# (see module docstring) — never handled generically here.
+EXCLUDED_FAMILIES = {"cot_red_handed"}
 
 METRIC_LABELS = {
     "auroc":        "AUROC",
@@ -92,13 +103,18 @@ def main() -> None:
                         help="Evaluate all models found in the family directory")
     args = parser.parse_args()
 
-    families_available = list_baseline_families(BASELINE_RESULTS_DIR)
+    families_available = [f for f in list_baseline_families(BASELINE_RESULTS_DIR) if f not in EXCLUDED_FAMILIES]
 
     if args.list:
         print("Available baseline families:")
         for f in families_available:
             print(f"  {f}")
         return
+
+    if args.family in EXCLUDED_FAMILIES:
+        print(f"[ERROR] '{args.family}' has its own dedicated evaluator — "
+              f"run scripts/eval_{args.family}.py instead.")
+        sys.exit(1)
 
     families = [args.family] if args.family else families_available
     if not families:

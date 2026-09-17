@@ -50,15 +50,18 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 ├── data/
 │   ├── deepseek_dataset_150_no_label.json     # 150 prompts x 4 pressure-framing (L2) variants
 │   ├── deepseek_dataset_150_with_labels.json  # + human-annotated ground truth (DeepSeek-R1)
-│   ├── open_deception_gpt4o_en.json           # 47 kept GPT-4o multi-turn dialogues (curated)
-│   ├── OpenDeception-C187/                    # Raw source for the 50 GPT-4o transcripts above
-│   │   ├── data/English/GPT-4o/                   # (Wu et al., 2025 — only the slice we use)
-│   │   └── examples.py                            # Per-scenario goal text, read by parse_open_deception.py
-│   ├── human_eval_models/                     # Per-model no-label/with-labels JSON (GPT-4o,
-│   │                                             Claude Sonnet 4.6, Qwen2.5-7B)
-│   └── human_eval_final_gt_202609_gpt_claude_qwen.xlsx  # Source annotation spreadsheet
+│   ├── open_deception/
+│   │   ├── OpenDeception-C187/                    # Raw source (Wu et al., 2025), trimmed to just
+│   │   │   ├── data/English/GPT-4o/                   # the 50 GPT-4o transcripts the paper uses
+│   │   │   └── examples.py                            # Per-scenario goal text (read as plain text)
+│   │   └── open_deception_gpt4o_en.json           # generated — see "Multi-turn" below, not checked in
+│   └── human_eval/
+│       ├── human_eval_final_gt_202609_gpt_claude_qwen.xlsx  # Source annotation spreadsheet
+│       └── models/                                # Per-model no-label/with-labels JSON, written by
+│                                                       scripts/convert_human_eval_xlsx.py
 ├── config.py                   # LLM presets and API configuration
-├── project_paths.py            # Canonical path constants
+├── project_paths.py            # Canonical path constants — every script/workflow above imports
+│                                  its dataset paths from here rather than hardcoding them
 └── requirements.txt
 ```
 
@@ -106,11 +109,15 @@ python scripts/eval_imt.py --all
 ### Multi-turn (OpenDeception)
 
 ```bash
-# Run DECOR over the 47 kept OpenDeception dialogues
+# 1. Generate data/open_deception/open_deception_gpt4o_en.json from the raw transcripts
+#    (deterministic; not checked in, so this is a one-time setup step)
+python scripts/parse_open_deception.py
+
+# 2. Run DECOR over the resulting dialogues
 python workflows/multiturn_iu_sis_workflow.py
 # -> results/open_deception/imt_multiturn_gpt4o.json (thought + response scores)
 
-# Evaluate against a baseline's dialogue/round-level output (defaults to Zero-shot)
+# 3. Evaluate against a baseline's round-level output (defaults to Zero-shot)
 python scripts/eval_multiturn_open_deception.py --target response
 python scripts/eval_multiturn_open_deception.py --target thought
 ```
@@ -130,11 +137,11 @@ python scripts/eval_scheming_judge.py --input-dir results/baselines
 python scripts/eval_cot_red_handed.py
 ```
 
-Multi-turn counterparts (`baselines/run_*_open_deception_round.py`) run the same judges over `data/open_deception_gpt4o_en.json`, one round at a time, then aggregate per dialogue (matching the paper's Appendix C.1 protocol — cumulative context, max-pooled across turns). Evaluate any of them against DECOR with `scripts/eval_multiturn_open_deception.py --round-path <file> --target {thought,response}`; the evaluator auto-detects whether the file uses binary per-round labels (Zero-shot, DeceptionBench) or continuous per-round scores (CoT Red-Handed, Constitutional Monitor).
+Multi-turn counterparts (`baselines/run_*_open_deception_round.py`) run the same judges over `data/open_deception/open_deception_gpt4o_en.json` (run `scripts/parse_open_deception.py` first — see above), one round at a time, then aggregate per dialogue (matching the paper's Appendix C.1 protocol — cumulative context, max-pooled across turns). Evaluate any of them against DECOR with `scripts/eval_multiturn_open_deception.py --round-path <file> --target {thought,response}`; the evaluator auto-detects whether the file uses binary per-round labels (Zero-shot, DeceptionBench) or continuous per-round scores (CoT Red-Handed, Constitutional Monitor).
 
 ### Human-annotated ground truth for additional models
 
-`data/human_eval_models/` and `data/human_eval_final_gt_202609_gpt_claude_qwen.xlsx` extend the human-annotated ground truth beyond the paper's DeepSeek-R1 set to GPT-4o, Claude Sonnet 4.6, and Qwen2.5-7B generations.
+`data/human_eval/` extends the human-annotated ground truth beyond the paper's DeepSeek-R1 set to GPT-4o, Claude Sonnet 4.6, and Qwen2.5-7B generations.
 
 ```bash
 python scripts/convert_human_eval_xlsx.py

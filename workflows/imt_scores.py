@@ -63,7 +63,8 @@ THOUGHT_STRATEGY  = "full_avg"
 RESPONSE_STRATEGY = "decisive_avg"
 N_FOLDS = 5
 FOLD_SEED = 42
-DEFAULT_LABELS = Path(__file__).resolve().parents[1] / "data" / "deepseek_dataset_150_with_labels.json"
+
+from project_paths import DEFAULT_DATASET_HUMAN_EVAL as DEFAULT_LABELS
 
 
 # ── Low-level score helpers ────────────────────────────────────────────────────

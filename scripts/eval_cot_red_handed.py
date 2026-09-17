@@ -46,9 +46,10 @@ from sklearn.metrics import (
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from project_paths import DEFAULT_DATASET_HUMAN_EVAL as DEFAULT_LABELS
+
 DEFAULT_INPUT_DIR  = ROOT / "results" / "baselines" / "cot_red_handed"
 DEFAULT_OUTPUT_DIR = ROOT / "results" / "eval" / "baselines" / "cot_red_handed"
-DEFAULT_LABELS     = ROOT / "data" / "deepseek_dataset_150_with_labels.json"
 
 SCORE_KEYS = ("response_raw", "thought_raw", "hybrid_score")
 

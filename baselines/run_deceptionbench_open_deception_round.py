@@ -22,7 +22,7 @@ from config import DEFAULT_LLM_PRESET, get_llm_config  # noqa: E402
 from llm_interface.factory import create_llm  # noqa: E402
 
 
-DEFAULT_INPUT = PROJECT_ROOT / "data" / "open_deception_gpt4o_en.json"
+from project_paths import OPEN_DECEPTION_INPUT as DEFAULT_INPUT
 DEFAULT_OUTPUT = PROJECT_ROOT / "results" / "open_deception" / "deceptionbench_open_deception_round.json"
 
 

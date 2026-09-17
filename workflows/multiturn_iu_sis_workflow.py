@@ -43,13 +43,15 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from agents.MultiTurnIUAuditor import MultiTurnIUAuditor  # noqa: E402
 from config import DEFAULT_LLM_PRESET, get_llm_config  # noqa: E402
 from llm_interface import create_llm  # noqa: E402
+from project_paths import (  # noqa: E402
+    OPEN_DECEPTION_EXAMPLES as OPENDECEPTION_EXAMPLES,
+    OPEN_DECEPTION_INPUT as DEFAULT_INPUT,
+)
 
 
-DEFAULT_INPUT = PROJECT_ROOT / "data" / "open_deception_gpt4o_en.json"
 DEFAULT_OUTPUT = (
     PROJECT_ROOT / "results" / "open_deception" / "imt_multiturn_gpt4o.json"
 )
-OPENDECEPTION_EXAMPLES = PROJECT_ROOT / "data" / "OpenDeception-C187" / "examples.py"
 
 
 def _normalize_scenario_name(name: str) -> str:

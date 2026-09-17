@@ -47,7 +47,7 @@ from config import get_llm_config
 from llm_interface.factory import create_llm
 
 # ── Default paths ──────────────────────────────────────────────────────────────
-DEFAULT_INPUT      = PROJECT_ROOT / "data" / "deepseek_dataset_150_no_label.json"
+from project_paths import DEFAULT_DATASET_NO_EVAL as DEFAULT_INPUT
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "results" / "baselines"
 
 # ── Scheming suspicion prompts ─────────────────────────────────────────────────

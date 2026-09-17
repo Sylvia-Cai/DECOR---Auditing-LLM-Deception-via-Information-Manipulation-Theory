@@ -25,7 +25,7 @@ from baselines.run_cot_red_handed import (  # noqa: E402
 )
 
 
-DEFAULT_INPUT = PROJECT_ROOT / "data" / "open_deception_gpt4o_en.json"
+from project_paths import OPEN_DECEPTION_INPUT as DEFAULT_INPUT
 DEFAULT_OUTPUT = PROJECT_ROOT / "results" / "open_deception" / "cot_red_handed_open_deception_round.json"
 
 

@@ -4,7 +4,7 @@ scripts/eval_imt_human_eval.py
 Evaluate IMT audit results produced by scripts/run_imt_human_eval.py: AUROC +
 5-fold binary metrics per (target model, auditor model) pair. Mirrors
 scripts/eval_imt.py, but each target model's audit results are matched against
-its own human-eval ground truth file (data/human_eval_models/<target>_dataset_with_labels.json)
+its own human-eval ground truth file (data/human_eval/models/<target>_dataset_with_labels.json)
 instead of the deepseek labels.
 
 Usage:
