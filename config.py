@@ -12,10 +12,12 @@ DEFAULT_MAX_TOKENS = 10000
 _AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "")
 _AZURE_FOUNDRY_API_KEY = os.getenv("AZURE_FOUNDRY_API_KEY", _AZURE_OPENAI_API_KEY)
 
+_AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "https://YOUR-RESOURCE.openai.azure.com/")
+
 _AZURE_BASE = {
     "provider": "azure_openai",
     "api_key": _AZURE_OPENAI_API_KEY,
-    "azure_endpoint": "https://ai-lcai649345ai679548241409.openai.azure.com/",
+    "azure_endpoint": _AZURE_OPENAI_ENDPOINT,
     "api_version": "2024-12-01-preview",
     "temperature": DEFAULT_TEMPERATURE,
     "max_completion_tokens": DEFAULT_MAX_TOKENS,
@@ -56,10 +58,12 @@ AZURE_O4_MINI_CONFIG = {
     "skip_temperature": True,
 }
 
+_AZURE_FOUNDRY_ENDPOINT = os.getenv("AZURE_FOUNDRY_ENDPOINT", "https://YOUR-RESOURCE.services.ai.azure.com/openai/v1/")
+
 _AZURE_FOUNDRY_OPENAI_BASE = {
     "provider": "openai_compatible",
     "api_key": _AZURE_FOUNDRY_API_KEY,
-    "base_url": "https://ai-lcai649345ai679548241409.services.ai.azure.com/openai/v1/",
+    "base_url": _AZURE_FOUNDRY_ENDPOINT,
     "temperature": DEFAULT_TEMPERATURE,
     "max_completion_tokens": DEFAULT_MAX_TOKENS,
 }
@@ -120,7 +124,7 @@ AZURE_DEEPSEEK_CONFIG = {
     "provider": "azure_deepseek",
     "api_key": _AZURE_FOUNDRY_API_KEY,
     # Azure AI Foundry OpenAI-compatible endpoint (openai.OpenAI, not AzureOpenAI)
-    "azure_endpoint": "https://ai-lcai649345ai679548241409.services.ai.azure.com/openai/v1/",
+    "azure_endpoint": _AZURE_FOUNDRY_ENDPOINT,
     "deployment_name": "DeepSeek-V4-Flash-0731",
     "model_name": "DeepSeek-V4-Flash-0731",
     "temperature": DEFAULT_TEMPERATURE,
@@ -176,8 +180,16 @@ GOOGLE_GEMINI31_CONFIG = {
 
 _ANTHROPIC_BASE = {
     "provider": "azure_anthropic",
+    "api_key": os.getenv("AZURE_ANTHROPIC_API_KEY", ""),
+    "azure_endpoint": os.getenv("AZURE_ANTHROPIC_ENDPOINT", "https://YOUR-RESOURCE.services.ai.azure.com/anthropic/"),
+    "max_completion_tokens": DEFAULT_MAX_TOKENS,
+}
+
+# Direct (non-Azure) Anthropic API — works with a plain console.anthropic.com key,
+# no Azure account needed. Prefer this preset when reproducing without Azure access.
+_ANTHROPIC_DIRECT_BASE = {
+    "provider": "anthropic",
     "api_key": os.getenv("ANTHROPIC_API_KEY", ""),
-    "azure_endpoint": "https://jli29-mffqs6vb-swedencentral.services.ai.azure.com/anthropic/",
     "max_completion_tokens": DEFAULT_MAX_TOKENS,
 }
 
@@ -199,7 +211,28 @@ AZURE_CLAUDE_OPUS47_CONFIG = {
     "model_name": "claude-opus-4-7",
 }
 
+ANTHROPIC_CLAUDE_SONNET46_CONFIG = {
+    **_ANTHROPIC_DIRECT_BASE,
+    "model_name": "claude-sonnet-4-6",
+}
+
+# Direct (official) OpenAI API — works with a plain platform.openai.com key,
+# no Azure account needed. Prefer this preset when reproducing without Azure access.
+OPENAI_GPT4O_CONFIG = {
+    "provider": "openai",
+    "api_key": os.getenv("OPENAI_API_KEY", ""),
+    "model_name": "gpt-4o",
+    "temperature": DEFAULT_TEMPERATURE,
+    "max_completion_tokens": DEFAULT_MAX_TOKENS,
+}
+
 LLM_PRESETS = {
+    # Direct provider APIs — no Azure account needed, just the vendor's own API key.
+    # Use these to reproduce without access to the authors' Azure deployment.
+    "openai_gpt4o":          OPENAI_GPT4O_CONFIG,
+    "anthropic_claude_sonnet46": ANTHROPIC_CLAUDE_SONNET46_CONFIG,
+    "google_gemini25pro":    GOOGLE_GEMINI25_CONFIG,
+    "google_gemini31pro":    GOOGLE_GEMINI31_CONFIG,
     # Azure OpenAI — GPT series
     "azure_gpt4o":          AZURE_GPT4O_CONFIG,
     "azure_gpt5":           AZURE_GPT5_CONFIG,
@@ -218,9 +251,6 @@ LLM_PRESETS = {
     "azure_claude_sonnet46": AZURE_CLAUDE_SONNET46_CONFIG,
     "azure_claude_opus46":   AZURE_CLAUDE_OPUS46_CONFIG,
     "azure_claude_opus47":   AZURE_CLAUDE_OPUS47_CONFIG,
-    # Google Gemini
-    "google_gemini25pro":   GOOGLE_GEMINI25_CONFIG,
-    "google_gemini31pro":   GOOGLE_GEMINI31_CONFIG,
     # Other providers
     "openrouter_grok4":     OPENROUTER_GROK4_CONFIG,
     "openrouter_qwen3":     OPENROUTER_QWEN3_CONFIG,

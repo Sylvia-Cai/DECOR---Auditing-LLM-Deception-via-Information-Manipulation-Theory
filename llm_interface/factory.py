@@ -22,9 +22,13 @@ def create_llm(config: Dict[str, Any]):
         from .azure_anthropic_llm import AzureAnthropicLLM
 
         return AzureAnthropicLLM(config)
+    if provider == "anthropic":
+        from .anthropic_llm import AnthropicLLM
+
+        return AnthropicLLM(config)
 
     raise ValueError(
         "Unsupported provider "
         f"'{provider}'. Expected one of: azure_openai, azure_deepseek, azure_anthropic, "
-        "openai_compatible, openrouter, google_genai"
+        "anthropic, openai_compatible, openrouter, google_genai"
     )

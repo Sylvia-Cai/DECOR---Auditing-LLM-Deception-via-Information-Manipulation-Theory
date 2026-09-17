@@ -3,6 +3,7 @@ from .base_llm import BaseLLM
 from .azure_openai_llm import AzureOpenAILLM
 from .azure_deepseek_llm import AzureDeepSeekLLM
 from .azure_anthropic_llm import AzureAnthropicLLM
+from .anthropic_llm import AnthropicLLM
 from .openai_llm import OpenAILLM
 from .google_genai_llm import GoogleGenAILLM
 
@@ -12,6 +13,7 @@ __all__ = [
     "AzureOpenAILLM",
     "AzureDeepSeekLLM",
     "AzureAnthropicLLM",
+    "AnthropicLLM",
     "OpenAILLM",
     "GoogleGenAILLM",
 ]
