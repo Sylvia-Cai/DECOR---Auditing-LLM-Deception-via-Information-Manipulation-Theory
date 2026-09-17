@@ -43,15 +43,16 @@ FOLD_SEED = 42
 
 DEFAULT_PATHS = {
     "thought": {
-        # imt_multiturn_gpt4o_iu_sis_both_no_decay.json contains both thought & response scores (v2, best AUROC)
-        "imt": RESULTS_DIR / "imt_multiturn_gpt4o_iu_sis_both_no_decay.json",
+        # imt_multiturn_gpt4o.json (workflows/multiturn_iu_sis_workflow.py's default
+        # output) contains both thought & response scores.
+        "imt": RESULTS_DIR / "imt_multiturn_gpt4o.json",
         "dialogue": RESULTS_DIR / "simple_llm_judge_open_deception_dialogue_thought.json",
         "round": RESULTS_DIR / "simple_llm_judge_open_deception_round_thought.json",
         "out_txt": RESULTS_DIR / "multiturn_thought_eval.txt",
         "out_json": RESULTS_DIR / "multiturn_thought_eval.json",
     },
     "response": {
-        "imt": RESULTS_DIR / "imt_multiturn_gpt4o_iu_sis_both_no_decay.json",
+        "imt": RESULTS_DIR / "imt_multiturn_gpt4o.json",
         "dialogue": RESULTS_DIR / "simple_llm_judge_open_deception_dialogue.json",
         "round": RESULTS_DIR / "simple_llm_judge_open_deception_round.json",
         "out_txt": RESULTS_DIR / "multiturn_response_eval.txt",

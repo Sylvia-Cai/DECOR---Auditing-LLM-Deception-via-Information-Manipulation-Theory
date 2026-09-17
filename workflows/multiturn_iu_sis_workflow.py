@@ -45,9 +45,9 @@ from config import DEFAULT_LLM_PRESET, get_llm_config  # noqa: E402
 from llm_interface import create_llm  # noqa: E402
 
 
-DEFAULT_INPUT = PROJECT_ROOT / "results" / "open_deception" / "open_deception_gpt4o_en.json"
+DEFAULT_INPUT = PROJECT_ROOT / "data" / "open_deception_gpt4o_en.json"
 DEFAULT_OUTPUT = (
-    PROJECT_ROOT / "results" / "open_deception" / "imt_multiturn_gpt4o_iu_sis_both_v3.json"
+    PROJECT_ROOT / "results" / "open_deception" / "imt_multiturn_gpt4o.json"
 )
 OPENDECEPTION_EXAMPLES = PROJECT_ROOT / "data" / "OpenDeception-C187" / "examples.py"
 
