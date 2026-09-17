@@ -49,11 +49,9 @@ from llm_interface import create_llm
 from agents.InformationUnitAnalyst import InformationUnitAnalyst
 from agents.IMTAuditor import IMTAuditor
 from project_paths import (
-    DEFAULT_DATASET_NO_EVAL,
+    DEEPSEEK_DATASET,
     IMT_AUDIT_RESULTS_DIR,
-    LEGACY_DATA_DIR,
     ensure_project_dirs,
-    resolve_data_file,
 )
 
 # ── Configuration ──────────────────────────────────────────────────────────────
@@ -63,10 +61,7 @@ from project_paths import (
 # Worker count therefore controls the main concurrency knob for outbound LLM requests.
 MAX_WORKERS = 8
 
-DATA_FILE = resolve_data_file(
-    DEFAULT_DATASET_NO_EVAL,
-    LEGACY_DATA_DIR / "deepseek_dataset_150_no_eval.json",
-)
+DATA_FILE = DEEPSEEK_DATASET
 _RESULTS_DIR = IMT_AUDIT_RESULTS_DIR
 
 # Default output filename — overridden at runtime when --timestamp is used.
@@ -358,7 +353,7 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "--input", type=Path, default=DEFAULT_DATASET_NO_EVAL,
+        "--input", type=Path, default=DEEPSEEK_DATASET,
         help="Path to the input JSON dataset.",
     )
     parser.add_argument(

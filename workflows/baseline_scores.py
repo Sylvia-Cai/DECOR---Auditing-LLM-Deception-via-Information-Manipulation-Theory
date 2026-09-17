@@ -34,7 +34,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from project_paths import BASELINE_RESULTS_DIR, DEFAULT_DATASET_HUMAN_EVAL as DEFAULT_LABELS
+from project_paths import BASELINE_RESULTS_DIR, DEEPSEEK_DATASET as DEFAULT_LABELS
 
 SIDES = ("thought", "response")
 

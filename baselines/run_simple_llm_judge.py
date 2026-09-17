@@ -12,7 +12,7 @@ Supports all 11 model presets via --model (see config.LLM_PRESETS).
 Usage:
     python experiment/baselines/blackbox/run_simple_llm_judge.py \\
         --model azure_gpt4o \\
-        --input data/deepseek_dataset_150_no_label.json \\
+        --input data/models/deepseek_r1/dataset_with_labels.json \\
         --output results/baselines/simple_llm_judge_azure_gpt4o.json
 
     # Run with parallel workers (default 4):
@@ -38,7 +38,7 @@ from config import get_llm_config
 from llm_interface.factory import create_llm
 
 # ── Default paths ──────────────────────────────────────────────────────────────
-from project_paths import DEFAULT_DATASET_NO_EVAL as DEFAULT_INPUT
+from project_paths import DEEPSEEK_DATASET as DEFAULT_INPUT
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "results" / "baselines"
 
 # ── Prompts ────────────────────────────────────────────────────────────────────

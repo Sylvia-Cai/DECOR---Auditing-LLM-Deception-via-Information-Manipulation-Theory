@@ -4,8 +4,8 @@ scripts/eval_imt_human_eval.py
 Evaluate IMT audit results produced by scripts/run_imt.py --dataset human_eval: AUROC +
 5-fold binary metrics per (target model, auditor model) pair. Mirrors
 scripts/eval_imt.py, but each target model's audit results are matched against
-its own human-eval ground truth file (data/human_eval/models/<target>_dataset_with_labels.json)
-instead of the deepseek labels.
+its own human-eval ground truth file (data/models/<target>/dataset_with_labels.json)
+instead of the deepseek_r1 labels.
 
 Usage:
     python scripts/eval_imt_human_eval.py                        # evaluate all targets, all auditors found
@@ -26,10 +26,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from project_paths import HUMAN_EVAL_AUDIT_RESULTS_DIR, HUMAN_EVAL_DATA_DIR, HUMAN_EVAL_EVAL_RESULTS_DIR
+from project_paths import HUMAN_EVAL_AUDIT_RESULTS_DIR, HUMAN_EVAL_EVAL_RESULTS_DIR, HUMAN_EVAL_TARGETS, model_dataset_path
 from scripts.eval_imt import build_summary, eval_model
-from scripts.run_imt import ALL_TARGETS
 from workflows.imt_scores import find_model_files
+
+ALL_TARGETS = HUMAN_EVAL_TARGETS
 
 
 def main() -> None:
@@ -45,7 +46,7 @@ def main() -> None:
 
     for target in args.targets:
         results_dir = HUMAN_EVAL_AUDIT_RESULTS_DIR / target
-        labels_path = HUMAN_EVAL_DATA_DIR / f"{target}_dataset_with_labels.json"
+        labels_path = model_dataset_path(target)
 
         if not results_dir.exists():
             print(f"[WARN] No audit results dir for target '{target}': {results_dir}")

@@ -13,7 +13,7 @@ Input/output format is aligned with other blackbox baselines.
 Usage:
     python experiment/baselines/blackbox/run_deceptionbench.py \
         --model azure_gpt4o \
-        --input data/deepseek_dataset_150_no_label.json \
+        --input data/models/deepseek_r1/dataset_with_labels.json \
         --output results/baselines/deceptionbench_azure_gpt4o.json
 
     # Parallel workers:
@@ -38,7 +38,7 @@ sys.path.append(str(PROJECT_ROOT))
 from config import get_llm_config
 from llm_interface.factory import create_llm
 
-from project_paths import DEFAULT_DATASET_NO_EVAL as DEFAULT_INPUT
+from project_paths import DEEPSEEK_DATASET as DEFAULT_INPUT
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "results" / "baselines"
 
 

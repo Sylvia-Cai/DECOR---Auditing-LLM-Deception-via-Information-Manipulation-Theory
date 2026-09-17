@@ -13,9 +13,25 @@ BASELINE_RESULTS_DIR = RESULTS_DIR / "baselines"
 EVAL_RESULTS_DIR = RESULTS_DIR / "eval"
 FIGURES_DIR = RESULTS_DIR / "figures"
 
-# ── Single-turn dataset (DeceptionBench-style scenarios) ───────────────────────
-DEFAULT_DATASET_NO_EVAL = DATA_DIR / "deepseek_dataset_150_no_label.json"
-DEFAULT_DATASET_HUMAN_EVAL = DATA_DIR / "deepseek_dataset_150_with_labels.json"
+# ── Single-turn datasets: one directory per model, each holding one
+# dataset_with_labels.json (prompt + responses + human-annotated ground truth).
+# Every consumer (pipeline workflows, baseline runners) reads only the
+# "prompt"/"responses" fields and never the "human_eval" field, so the same
+# labeled file safely serves as both pipeline input and evaluation ground
+# truth — there is no separate "no label" variant to keep in sync.
+MODELS_DIR = DATA_DIR / "models"
+
+ALL_MODEL_TARGETS = ["deepseek_r1", "gpt4o", "claude_sonnet46", "qwen25_7b"]
+# The paper's primary single-turn dataset (DeepSeek-R1 generations); the other
+# three targets extend human-annotated ground truth to additional models.
+HUMAN_EVAL_TARGETS = ["gpt4o", "claude_sonnet46", "qwen25_7b"]
+
+
+def model_dataset_path(target: str) -> Path:
+    return MODELS_DIR / target / "dataset_with_labels.json"
+
+
+DEEPSEEK_DATASET = model_dataset_path("deepseek_r1")
 
 # ── Multi-turn dataset (OpenDeception) ──────────────────────────────────────────
 OPEN_DECEPTION_DIR = DATA_DIR / "open_deception"
@@ -26,23 +42,9 @@ OPEN_DECEPTION_EXAMPLES = OPEN_DECEPTION_C187_DIR / "examples.py"
 # not checked in (it's a deterministic function of the raw transcripts above).
 OPEN_DECEPTION_INPUT = OPEN_DECEPTION_DIR / "open_deception_gpt4o_en.json"
 
-# ── Human-annotated ground truth for additional models ─────────────────────────
-# (extends the paper's DeepSeek-R1-only set to GPT-4o, Claude Sonnet 4.6, Qwen2.5-7B)
-HUMAN_EVAL_DIR = DATA_DIR / "human_eval"
-HUMAN_EVAL_DATA_DIR = HUMAN_EVAL_DIR / "models"
+# ── Audit/eval output locations for the human-eval targets ─────────────────────
 HUMAN_EVAL_AUDIT_RESULTS_DIR = RESULTS_DIR / "imt_audit_human_eval"
 HUMAN_EVAL_EVAL_RESULTS_DIR = EVAL_RESULTS_DIR / "imt_human_eval"
-
-# Not used in this repo (no legacy data layout here); kept only because
-# workflows/imt_audit_workflow.py falls back to it when the primary dataset
-# path is missing.
-LEGACY_DATA_DIR = DATA_DIR / "_legacy"
-
-
-def resolve_data_file(primary: Path, legacy: Path) -> Path:
-    if primary.exists():
-        return primary
-    return legacy
 
 
 def ensure_project_dirs() -> None:

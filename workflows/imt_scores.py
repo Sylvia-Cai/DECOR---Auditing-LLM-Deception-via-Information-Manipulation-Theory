@@ -64,7 +64,7 @@ RESPONSE_STRATEGY = "decisive_avg"
 N_FOLDS = 5
 FOLD_SEED = 42
 
-from project_paths import DEFAULT_DATASET_HUMAN_EVAL as DEFAULT_LABELS
+from project_paths import DEEPSEEK_DATASET as DEFAULT_LABELS
 
 
 # ── Low-level score helpers ────────────────────────────────────────────────────

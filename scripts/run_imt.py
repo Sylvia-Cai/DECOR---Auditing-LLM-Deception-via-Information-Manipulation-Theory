@@ -42,16 +42,17 @@ sys.path.insert(0, str(ROOT))
 
 from config import LLM_PRESETS
 from project_paths import (
-    DEFAULT_DATASET_NO_EVAL,
+    DEEPSEEK_DATASET,
     HUMAN_EVAL_AUDIT_RESULTS_DIR,
-    HUMAN_EVAL_DATA_DIR,
+    HUMAN_EVAL_TARGETS,
     IMT_AUDIT_RESULTS_DIR,
+    model_dataset_path,
 )
 
 WORKFLOW = ROOT / "workflows" / "imt_audit_workflow.py"
 DEFAULT_MODEL = "azure_gpt4o"
 DEFAULT_WORKERS = 8
-ALL_TARGETS = ["claude_sonnet46", "gpt4o", "qwen25_7b"]
+ALL_TARGETS = HUMAN_EVAL_TARGETS
 
 
 def _run_once(model: str, input_file: Path, output: Path, workers: int, label: str) -> bool:
@@ -89,7 +90,7 @@ def _run_main_dataset(args) -> dict:
                 print(f"[SKIP] {key}")
                 results[key] = "skip"
                 continue
-            results[key] = "ok" if _run_once(model, DEFAULT_DATASET_NO_EVAL, out, args.workers, key) else "fail"
+            results[key] = "ok" if _run_once(model, DEEPSEEK_DATASET, out, args.workers, key) else "fail"
     return results
 
 
@@ -97,14 +98,14 @@ def _run_human_eval_dataset(args) -> dict:
     auditors = [m for m in LLM_PRESETS.keys() if m not in args.exclude] if args.all else [args.model]
 
     for target in args.targets:
-        no_label_path = HUMAN_EVAL_DATA_DIR / f"{target}_dataset_no_label.json"
-        if not no_label_path.exists():
-            print(f"[ERROR] Missing {no_label_path}.")
+        input_file = model_dataset_path(target)
+        if not input_file.exists():
+            print(f"[ERROR] Missing {input_file}.")
             sys.exit(1)
 
     results = {}
     for target in args.targets:
-        input_file = HUMAN_EVAL_DATA_DIR / f"{target}_dataset_no_label.json"
+        input_file = model_dataset_path(target)
         out_dir = HUMAN_EVAL_AUDIT_RESULTS_DIR / target
         out_dir.mkdir(parents=True, exist_ok=True)
 

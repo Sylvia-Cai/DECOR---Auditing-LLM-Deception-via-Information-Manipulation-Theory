@@ -44,16 +44,20 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   ├── eval_multiturn_open_deception.py    # Multi-turn AUROC evaluation (DECOR vs. one baseline)
 │   └── eval_imt_human_eval.py              # Evaluate the human-eval model set
 ├── data/
-│   ├── deepseek_dataset_150_no_label.json     # 150 prompts x 4 pressure-framing (L2) variants
-│   ├── deepseek_dataset_150_with_labels.json  # + human-annotated ground truth (DeepSeek-R1)
-│   ├── open_deception/
-│   │   ├── OpenDeception-C187/                    # Raw source (Wu et al., 2025), trimmed to just
-│   │   │   ├── data/English/GPT-4o/                   # the 50 GPT-4o transcripts the paper uses
-│   │   │   └── examples.py                            # Per-scenario goal text (read as plain text)
-│   │   └── open_deception_gpt4o_en.json           # generated — see "Multi-turn" below, not checked in
-│   └── human_eval/
-│       └── models/                                # Per-model no-label/with-labels JSON (GPT-4o,
-│                                                       Claude Sonnet 4.6, Qwen2.5-7B)
+│   ├── models/                                 # One dataset per audited model (150 prompts x 4
+│   │   │                                          pressure-framing (L2) variants = 600 scenarios)
+│   │   ├── deepseek_r1/dataset_with_labels.json    # The paper's primary dataset
+│   │   ├── gpt4o/dataset_with_labels.json          # Human-annotated GT extension to 3 more models
+│   │   ├── claude_sonnet46/dataset_with_labels.json
+│   │   └── qwen25_7b/dataset_with_labels.json
+│   │       # Each file doubles as pipeline input and evaluation ground truth: every
+│   │       # consumer reads only "prompt"/"responses", never "human_eval", so there's
+│   │       # no separate no-label variant to keep in sync.
+│   └── open_deception/
+│       ├── OpenDeception-C187/                    # Raw source (Wu et al., 2025), trimmed to just
+│       │   ├── data/English/GPT-4o/                   # the 50 GPT-4o transcripts the paper uses
+│       │   └── examples.py                            # Per-scenario goal text (read as plain text)
+│       └── open_deception_gpt4o_en.json           # generated — see "Multi-turn" below, not checked in
 ├── config.py                   # LLM presets and API configuration
 ├── project_paths.py            # Canonical path constants — every script/workflow above imports
 │                                  its dataset paths from here rather than hardcoding them
@@ -136,7 +140,7 @@ Multi-turn counterparts (`baselines/run_*_open_deception_round.py`) run the same
 
 ### Human-annotated ground truth for additional models
 
-`data/human_eval/models/` extends the human-annotated ground truth beyond the paper's DeepSeek-R1 set to GPT-4o, Claude Sonnet 4.6, and Qwen2.5-7B generations.
+`data/models/{gpt4o,claude_sonnet46,qwen25_7b}/` extend the human-annotated ground truth beyond the paper's DeepSeek-R1 set.
 
 ```bash
 python scripts/run_imt.py --dataset human_eval --all
