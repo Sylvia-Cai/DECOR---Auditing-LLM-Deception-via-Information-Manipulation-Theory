@@ -9,7 +9,7 @@ class AzureAnthropicLLM(BaseLLM):
 
     Uses the AnthropicFoundry client (anthropic>=0.40.0).
     Config keys:
-        api_key        — Azure Anthropic API key (ANTHROPIC_API_KEY)
+        api_key        — Azure Anthropic API key (AZURE_ANTHROPIC_API_KEY)
         azure_endpoint — Full Foundry endpoint URL (including trailing /anthropic/)
         deployment_name — Model deployment name (e.g. "claude-sonnet-4-6")
         max_completion_tokens — Max output tokens (default 3000)
