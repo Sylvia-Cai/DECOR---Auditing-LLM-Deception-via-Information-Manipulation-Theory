@@ -15,17 +15,16 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   ├── InformationUnitAnalyst.py  # Phase 1: context decomposition + impact weighting
 │   ├── IMTAuditor.py              # Phase 2: per-IU IMT scoring (single-turn)
 │   └── MultiTurnIUAuditor.py      # Phase 1+2 for multi-turn dialogues
-├── llm_interface/              # Model-agnostic LLM backends
+├── llm_interface/              # Model-agnostic LLM backends (3 classes, dispatched by protocol)
 │   ├── base_llm.py                 # Abstract base + retry logic
-│   ├── factory.py                  # create_llm() dispatcher
-│   ├── azure_openai_llm.py         # Azure OpenAI (GPT-4o, GPT-5, o3, …)
-│   ├── azure_deepseek_llm.py       # Azure AI Foundry — DeepSeek
-│   ├── azure_anthropic_llm.py      # Azure AI Foundry — Claude
+│   ├── openai_llm.py               # Any OpenAI-protocol endpoint (OpenAI, Azure OpenAI,
+│   │                                  Azure AI Foundry, OpenRouter, SiliconFlow, ...)
+│   ├── anthropic_llm.py            # Anthropic Claude (direct API or Azure AI Foundry)
 │   ├── google_genai_llm.py         # Google Gemini
-│   └── openai_llm.py               # Official OpenAI API (reference impl.)
+│   └── __init__.py                 # create_llm() dispatcher (reads config["provider"])
 ├── workflows/                  # Pipeline entry points
 │   ├── singleturn_iu_audit_workflow.py # Main single-turn DECOR pipeline
-│   ├── multiturn_iu_sis_workflow.py # Main multi-turn DECOR pipeline
+│   ├── multiturn_iu_sis_workflow.py    # Main multi-turn DECOR pipeline
 │   ├── imt_scores.py               # Shared scoring/AUROC utilities
 │   └── baseline_scores.py          # Shared baseline scoring utilities
 ├── baselines/                  # One subfolder per black-box baseline family, each with a
@@ -63,6 +62,8 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 ├── config.py                   # LLM presets and API configuration
 ├── project_paths.py            # Canonical path constants — every script/workflow above imports
 │                                  its dataset paths from here rather than hardcoding them
+├── .env.example                # Template for API keys / endpoints (copy to .env)
+├── LICENSE                     # MIT — see "License" below for third-party data scope
 └── requirements.txt
 ```
 
@@ -80,18 +81,50 @@ pip install -r requirements.txt
 
 ### 2. Configure API keys
 
-Create a `.env` file in the project root:
-
-```env
-AZURE_OPENAI_API_KEY=your_azure_key
-AZURE_FOUNDRY_API_KEY=your_azure_foundry_key   # falls back to AZURE_OPENAI_API_KEY if unset
-ANTHROPIC_API_KEY=your_anthropic_key
-GOOGLE_API_KEY=your_google_key
-OPENROUTER_API_KEY=your_openrouter_key
-SILICONFLOW_API_KEY=your_siliconflow_key
+```bash
+cp .env.example .env
 ```
 
-Only the keys for the providers/models you plan to run are required. See `config.py` for the full model-preset registry and `llm_interface/openai_llm.py` for a minimal reference implementation against the official OpenAI API.
+Then fill in only the keys for the providers you actually plan to use — `.env.example` documents every key `config.py` reads and which presets each one unlocks. You do **not** need every key: pick one text-generation provider and you can run the whole pipeline.
+
+See "Reproducibility" below for how to pick a provider without access to the authors' own Azure deployment, and `config.py` for the full `LLM_PRESETS` registry.
+
+---
+
+## Reproducibility
+
+### Determinism
+
+- Every LLM call in the pipeline, baselines, and evaluation code uses `temperature=0.0` (`config.DEFAULT_TEMPERATURE`).
+- All cross-validation and threshold-fitting (`workflows/imt_scores.py`) uses a fixed 5-fold stratified split with `random_state=42`.
+- That said, **LLM APIs are not bit-exact reproducible even at temperature 0** — providers update model weights and sampling implementations over time without changing the model name, so re-running months later may not reproduce every individual audit verbatim. Aggregate metrics (AUROC, F1, etc. across the full 600-scenario / 47-dialogue evaluation sets) are stable in practice; do not expect a single audited item's score to match to the last decimal.
+
+### Reproducing without the authors' Azure account
+
+Most of `config.LLM_PRESETS` (`azure_*`) point at the authors' own Azure OpenAI / Azure AI Foundry deployment and will not work with your own Azure account unless you create deployments with matching names. If you don't have Azure access at all, use the **direct provider presets** instead — they need nothing but a normal API key from the vendor's own console:
+
+| Preset | Vendor | Env var |
+|---|---|---|
+| `openai_gpt4o` | official OpenAI API | `OPENAI_API_KEY` |
+| `anthropic_claude_sonnet46` | official Anthropic API | `ANTHROPIC_API_KEY` |
+| `google_gemini25pro` / `google_gemini31pro` | official Google AI API | `GOOGLE_API_KEY` |
+
+```bash
+python workflows/singleturn_iu_audit_workflow.py --model openai_gpt4o
+python scripts/eval_imt.py --all
+```
+
+works exactly like the `azure_gpt4o` examples throughout this README — every script takes `--model <preset>`, and the preset name is the only thing that changes.
+
+### Using a model that isn't in `config.py`
+
+`llm_interface/` has 3 provider classes, dispatched by `create_llm()` on `config["provider"]`:
+
+- **`OpenAILLM`** — any endpoint that speaks the OpenAI chat-completions protocol: official OpenAI, Azure OpenAI Service, Azure AI Foundry (DeepSeek, Grok, ...), OpenRouter, SiliconFlow, or a self-hosted OpenAI-compatible server. Point it at a new vendor by setting `base_url` + `api_key` + `model_name` — no new code needed. OpenRouter in particular proxies most other vendors' models behind one OpenAI-compatible endpoint, so it's often the fastest way to try a model this repo doesn't have a preset for.
+- **`AnthropicLLM`** — direct Anthropic API (`model_name` + `api_key`) or Azure AI Foundry (`azure_endpoint` + `deployment_name`).
+- **`GoogleGenAILLM`** — direct Google Gemini API only (`model_name` + `api_key`); uses the native SDK because it needs the `safety_settings=BLOCK_NONE` override — adversarial deception-research prompts get filtered by Gemini's default safety policy otherwise.
+
+To add a new preset, add a dict to `config.py` with the right `provider` + fields and give it a key in `LLM_PRESETS` — every script already accepts any preset key via `--model`.
 
 ---
 
@@ -189,3 +222,22 @@ Input context (C) + task (T)
 ```
 
 Each (item x L2 variant) task runs as a thread; checkpoints are written to disk after every item, so interrupted runs resume automatically.
+
+---
+
+## License
+
+This repository's code is released under the [MIT License](LICENSE). That license does **not** cover `data/open_deception/OpenDeception-C187/`, which is redistributed from a third-party benchmark (Wu et al., 2025) under its own terms — attribution details for that directory are still being finalized.
+
+## Citation
+
+If you use DECOR in your research, please cite:
+
+```bibtex
+@inproceedings{decor2026,
+  title     = {DECOR: Auditing LLM Deception via Information Manipulation Theory},
+  author    = {},
+  booktitle = {},
+  year      = {2026}
+}
+```
