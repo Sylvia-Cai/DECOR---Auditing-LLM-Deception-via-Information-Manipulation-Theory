@@ -1,4 +1,4 @@
-"""Multiturn IU-augmented IMT workflow (minimal v3).
+"""Multi-turn IU-augmented IMT workflow.
 
 Pipeline per dialogue:
   For each round t:
@@ -11,17 +11,19 @@ Pipeline per dialogue:
 
 Target modes:
   --target thought   : only thought audit (context = user turns only)
-    --target response  : only response audit (context = user turns only)
+  --target response  : only response audit (context = user turns only)
   --target both      : both audits (default)
 
-Key design decisions (Plan C):
+Key design decisions:
   - IU source: only user messages (not AI speech or thought).
   - IU scope: cumulative history from round 1 to current round.
   - IU update: incremental per round — extract from NEW user message only; append.
   - IU tagging: each IU records source_round (the round it was first extracted from).
-    - SIS assignment on newly extracted IUs (τ in {1,2,3}).
+  - SIS assignment on newly extracted IUs (τ in {1,2,3}).
   - Thought context: user-only history (no ai_speech), enforcing thought isolation.
-    - Response context: user-only history (aligned with thought).
+  - Response context: user-only history (aligned with thought).
+  - IUs accumulate with NO deduplication across rounds — a repeated commitment
+    is scored again each time it recurs, rather than only once.
 """
 
 from __future__ import annotations
@@ -455,7 +457,7 @@ def run_workflow(
     llm = create_llm(llm_config)
     agent = MultiTurnIUAuditor({}, llm)
 
-    print("Multiturn IU-augmented IMT workflow (Plan C, with SIS)")
+    print("Multi-turn IU-augmented IMT workflow")
     print(f"  Input       : {input_file}")
     print(f"  Output      : {output_file}")
     print(f"  Dialogues   : {len(filtered)} (filtered from {len(dialogues_all)})")
@@ -546,7 +548,7 @@ def run_workflow(
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Multiturn IU-augmented IMT workflow (minimal v3)")
+    parser = argparse.ArgumentParser(description="Multi-turn IU-augmented IMT workflow")
     parser.add_argument("--input", default=str(DEFAULT_INPUT), help="Parsed OpenDeception JSON")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output JSON path")
     parser.add_argument("--model", default=DEFAULT_LLM_PRESET, help="LLM preset key from config.py")

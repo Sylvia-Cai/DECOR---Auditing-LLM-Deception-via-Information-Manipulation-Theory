@@ -272,7 +272,7 @@ def run_workflow(
     effective_workers = _effective_worker_count(max_workers, llm_config)
 
     total_items = len(data)
-    print(f"\nIMT Audit Workflow v2")
+    print(f"\nIMT Audit Workflow")
     print(f"  Input  : {input_file}")
     print(f"  Output : {output_file}")
     print(f"  Items  : {total_items}")
@@ -344,7 +344,7 @@ def run_workflow(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="IMT Audit Workflow v2")
+    parser = argparse.ArgumentParser(description="IMT Audit Workflow")
     parser.add_argument(
         "--model", default=DEFAULT_LLM_PRESET,
         help=(

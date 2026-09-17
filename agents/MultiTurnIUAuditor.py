@@ -9,7 +9,8 @@ Pipeline per round:
   Call 3: Audit AI response against the cumulative IU set.
       Context shown = user-only history (no ai_speech), same as thought audit.
 
-IUs accumulate across rounds with NO deduplication (by design — Plan C).
+IUs accumulate across rounds with NO deduplication — a repeated commitment
+is scored again each time it recurs, rather than only once (by design).
 """
 
 from __future__ import annotations
