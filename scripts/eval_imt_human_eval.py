@@ -1,7 +1,7 @@
 """
 scripts/eval_imt_human_eval.py
 ================================
-Evaluate IMT audit results produced by scripts/run_imt_human_eval.py: AUROC +
+Evaluate IMT audit results produced by scripts/run_imt.py --dataset human_eval: AUROC +
 5-fold binary metrics per (target model, auditor model) pair. Mirrors
 scripts/eval_imt.py, but each target model's audit results are matched against
 its own human-eval ground truth file (data/human_eval/models/<target>_dataset_with_labels.json)
@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT))
 
 from project_paths import HUMAN_EVAL_AUDIT_RESULTS_DIR, HUMAN_EVAL_DATA_DIR, HUMAN_EVAL_EVAL_RESULTS_DIR
 from scripts.eval_imt import build_summary, eval_model
-from scripts.run_imt_human_eval import ALL_TARGETS
+from scripts.run_imt import ALL_TARGETS
 from workflows.imt_scores import find_model_files
 
 

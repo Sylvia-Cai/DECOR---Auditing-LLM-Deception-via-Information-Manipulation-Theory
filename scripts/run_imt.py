@@ -1,24 +1,33 @@
 """
 scripts/run_imt.py
 ==================
-Run the IMT audit workflow for one or all model presets.
+Run the IMT audit workflow (workflows/imt_audit_workflow.py) for one or all
+model presets, against either the main DeceptionBench-style dataset or the
+human-eval target-model datasets.
 
 Usage:
-    # Run default model (azure_gpt4o), once
+    # Main dataset — run default model (azure_gpt4o), once
     python scripts/run_imt.py
 
-    # Run a specific model, 3 times
+    # Main dataset — run a specific model, 3 times
     python scripts/run_imt.py --model azure_claude_sonnet46 --runs 3
 
-    # Run ALL models once
-    python scripts/run_imt.py --all
-
-    # Skip runs whose output file already exists
+    # Main dataset — run ALL models once, skipping ones already done
     python scripts/run_imt.py --all --skip-existing
 
+    # Human-eval datasets — run one auditor against all 3 target-model datasets
+    python scripts/run_imt.py --dataset human_eval --model azure_gpt4o
+
+    # Human-eval datasets — run ALL auditors against ALL 3 target-model datasets
+    python scripts/run_imt.py --dataset human_eval --all
+
+    # Human-eval datasets — restrict to specific target-model datasets
+    python scripts/run_imt.py --dataset human_eval --all --targets claude_sonnet46 gpt4o
+
 Output:
-    results/imt_audit/imt_audit_<model>_results.json          (single run)
-    results/imt_audit/imt_audit_<model>_run1.json  etc.       (multi-run)
+    Main dataset:  results/imt_audit/imt_audit_<model>_results.json          (single run)
+                   results/imt_audit/imt_audit_<model>_run<k>.json           (multi-run)
+    Human-eval:    results/imt_audit_human_eval/<target>/imt_audit_<auditor>_results.json
 """
 
 import argparse
@@ -32,45 +41,38 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from config import LLM_PRESETS
-from project_paths import DEFAULT_DATASET_NO_EVAL, IMT_AUDIT_RESULTS_DIR
+from project_paths import (
+    DEFAULT_DATASET_NO_EVAL,
+    HUMAN_EVAL_AUDIT_RESULTS_DIR,
+    HUMAN_EVAL_DATA_DIR,
+    IMT_AUDIT_RESULTS_DIR,
+)
 
 WORKFLOW = ROOT / "workflows" / "imt_audit_workflow.py"
 DEFAULT_MODEL = "azure_gpt4o"
 DEFAULT_WORKERS = 8
+ALL_TARGETS = ["claude_sonnet46", "gpt4o", "qwen25_7b"]
 
 
-def _run_once(model: str, output: Path, workers: int) -> bool:
+def _run_once(model: str, input_file: Path, output: Path, workers: int, label: str) -> bool:
     cmd = [
         sys.executable, str(WORKFLOW),
         "--model",   model,
-        "--input",   str(DEFAULT_DATASET_NO_EVAL),
+        "--input",   str(input_file),
         "--output",  str(output),
         "--workers", str(workers),
     ]
     env = os.environ.copy()
     env["PYTHONPATH"] = str(ROOT) + os.pathsep + env.get("PYTHONPATH", "")
     print(f"\n{'='*60}")
-    print(f"[RUN] {model}  ->  {output.name}")
+    print(f"[RUN] {label}  ->  {output.relative_to(ROOT)}")
     t0 = time.time()
     ok = subprocess.run(cmd, cwd=str(ROOT), env=env).returncode == 0
-    print(f"[{'OK' if ok else 'FAIL'}] {model}  ({time.time()-t0:.0f}s)")
+    print(f"[{'OK' if ok else 'FAIL'}] {label}  ({time.time()-t0:.0f}s)")
     return ok
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Run IMT audit for one or all models")
-    parser.add_argument("--model",  default=DEFAULT_MODEL,
-                        help=f"Model preset key (default: {DEFAULT_MODEL})")
-    parser.add_argument("--all",    action="store_true",
-                        help="Run all models defined in config.LLM_PRESETS")
-    parser.add_argument("--runs",   type=int, default=1,
-                        help="Number of repeated runs per model (default: 1)")
-    parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS,
-                        help=f"Concurrent workers per model (default: {DEFAULT_WORKERS})")
-    parser.add_argument("--skip-existing", action="store_true",
-                        help="Skip if output file already exists")
-    args = parser.parse_args()
-
+def _run_main_dataset(args) -> dict:
     models = list(LLM_PRESETS.keys()) if args.all else [args.model]
     IMT_AUDIT_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -87,7 +89,60 @@ def main() -> None:
                 print(f"[SKIP] {key}")
                 results[key] = "skip"
                 continue
-            results[key] = "ok" if _run_once(model, out, args.workers) else "fail"
+            results[key] = "ok" if _run_once(model, DEFAULT_DATASET_NO_EVAL, out, args.workers, key) else "fail"
+    return results
+
+
+def _run_human_eval_dataset(args) -> dict:
+    auditors = [m for m in LLM_PRESETS.keys() if m not in args.exclude] if args.all else [args.model]
+
+    for target in args.targets:
+        no_label_path = HUMAN_EVAL_DATA_DIR / f"{target}_dataset_no_label.json"
+        if not no_label_path.exists():
+            print(f"[ERROR] Missing {no_label_path}.")
+            sys.exit(1)
+
+    results = {}
+    for target in args.targets:
+        input_file = HUMAN_EVAL_DATA_DIR / f"{target}_dataset_no_label.json"
+        out_dir = HUMAN_EVAL_AUDIT_RESULTS_DIR / target
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        for auditor in auditors:
+            out = out_dir / f"imt_audit_{auditor}_results.json"
+            key = f"{auditor} on {target}"
+            if args.skip_existing and out.exists():
+                print(f"[SKIP] {key}")
+                results[key] = "skip"
+                continue
+            results[key] = "ok" if _run_once(auditor, input_file, out, args.workers, key) else "fail"
+    return results
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run IMT audit for one or all models")
+    parser.add_argument("--dataset", choices=("main", "human_eval"), default="main",
+                        help="Which dataset to run against (default: main)")
+    parser.add_argument("--model",  default=DEFAULT_MODEL,
+                        help=f"Model preset key (default: {DEFAULT_MODEL})")
+    parser.add_argument("--all",    action="store_true",
+                        help="Run all models defined in config.LLM_PRESETS")
+    parser.add_argument("--exclude", nargs="+", default=[],
+                        help="[--dataset human_eval] Auditor preset keys to exclude when using --all")
+    parser.add_argument("--targets", nargs="+", default=ALL_TARGETS, choices=ALL_TARGETS,
+                        help=f"[--dataset human_eval] Target-model datasets to audit (default: all of {ALL_TARGETS})")
+    parser.add_argument("--runs",   type=int, default=1,
+                        help="[--dataset main] Number of repeated runs per model (default: 1)")
+    parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS,
+                        help=f"Concurrent workers per run (default: {DEFAULT_WORKERS})")
+    parser.add_argument("--skip-existing", action="store_true",
+                        help="Skip if output file already exists")
+    args = parser.parse_args()
+
+    if args.dataset == "human_eval":
+        results = _run_human_eval_dataset(args)
+    else:
+        results = _run_main_dataset(args)
 
     print(f"\n{'='*60}  SUMMARY")
     for key, status in results.items():

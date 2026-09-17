@@ -29,7 +29,6 @@ OPEN_DECEPTION_INPUT = OPEN_DECEPTION_DIR / "open_deception_gpt4o_en.json"
 # ── Human-annotated ground truth for additional models ─────────────────────────
 # (extends the paper's DeepSeek-R1-only set to GPT-4o, Claude Sonnet 4.6, Qwen2.5-7B)
 HUMAN_EVAL_DIR = DATA_DIR / "human_eval"
-HUMAN_EVAL_XLSX = HUMAN_EVAL_DIR / "human_eval_final_gt_202609_gpt_claude_qwen.xlsx"
 HUMAN_EVAL_DATA_DIR = HUMAN_EVAL_DIR / "models"
 HUMAN_EVAL_AUDIT_RESULTS_DIR = RESULTS_DIR / "imt_audit_human_eval"
 HUMAN_EVAL_EVAL_RESULTS_DIR = EVAL_RESULTS_DIR / "imt_human_eval"

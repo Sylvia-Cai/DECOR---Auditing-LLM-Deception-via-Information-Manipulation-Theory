@@ -37,15 +37,11 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   ├── run_scheming_judge.py, run_scheming_judge_open_deception_round.py       # Constitutional Monitor
 │   └── cot_red_handed/                 # CoT Red-Handed monitor support code
 ├── scripts/                    # Evaluation / analysis entry points
-│   ├── run_imt.py                          # Run the single-turn pipeline for one/all models
+│   ├── run_imt.py                          # Run the single-turn pipeline (main or human-eval dataset)
 │   ├── eval_imt.py                         # Compute AUROC/F1/etc. for DECOR results
-│   ├── eval_baselines.py                   # Evaluate Zero-shot/Few-shot
-│   ├── eval_scheming_judge.py              # Evaluate Constitutional Monitor
-│   ├── eval_cot_red_handed.py              # Evaluate CoT Red-Handed (per-score-key breakdown)
+│   ├── eval_baselines.py                   # Evaluate all 5 single-turn baselines
 │   ├── parse_open_deception.py             # Parse raw OpenDeception-C187 GPT-4o transcripts
 │   ├── eval_multiturn_open_deception.py    # Multi-turn AUROC evaluation (DECOR vs. one baseline)
-│   ├── convert_human_eval_xlsx.py          # Convert human-annotated GT spreadsheet to JSON
-│   ├── run_imt_human_eval.py               # Run DECOR over the human-eval model set
 │   └── eval_imt_human_eval.py              # Evaluate the human-eval model set
 ├── data/
 │   ├── deepseek_dataset_150_no_label.json     # 150 prompts x 4 pressure-framing (L2) variants
@@ -56,9 +52,8 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   │   │   └── examples.py                            # Per-scenario goal text (read as plain text)
 │   │   └── open_deception_gpt4o_en.json           # generated — see "Multi-turn" below, not checked in
 │   └── human_eval/
-│       ├── human_eval_final_gt_202609_gpt_claude_qwen.xlsx  # Source annotation spreadsheet
-│       └── models/                                # Per-model no-label/with-labels JSON, written by
-│                                                       scripts/convert_human_eval_xlsx.py
+│       └── models/                                # Per-model no-label/with-labels JSON (GPT-4o,
+│                                                       Claude Sonnet 4.6, Qwen2.5-7B)
 ├── config.py                   # LLM presets and API configuration
 ├── project_paths.py            # Canonical path constants — every script/workflow above imports
 │                                  its dataset paths from here rather than hardcoding them
@@ -133,19 +128,18 @@ python baselines/run_scheming_judge.py              # Constitutional Monitor
 
 python scripts/eval_baselines.py --list             # see available families
 python scripts/eval_baselines.py --family simple_llm_judge_zeroshot --all
-python scripts/eval_scheming_judge.py --input-dir results/baselines
-python scripts/eval_cot_red_handed.py
+python scripts/eval_baselines.py --family cot_red_handed --all
+python scripts/eval_baselines.py --family scheming_judge --all
 ```
 
 Multi-turn counterparts (`baselines/run_*_open_deception_round.py`) run the same judges over `data/open_deception/open_deception_gpt4o_en.json` (run `scripts/parse_open_deception.py` first — see above), one round at a time, then aggregate per dialogue (matching the paper's Appendix C.1 protocol — cumulative context, max-pooled across turns). Evaluate any of them against DECOR with `scripts/eval_multiturn_open_deception.py --round-path <file> --target {thought,response}`; the evaluator auto-detects whether the file uses binary per-round labels (Zero-shot, DeceptionBench) or continuous per-round scores (CoT Red-Handed, Constitutional Monitor).
 
 ### Human-annotated ground truth for additional models
 
-`data/human_eval/` extends the human-annotated ground truth beyond the paper's DeepSeek-R1 set to GPT-4o, Claude Sonnet 4.6, and Qwen2.5-7B generations.
+`data/human_eval/models/` extends the human-annotated ground truth beyond the paper's DeepSeek-R1 set to GPT-4o, Claude Sonnet 4.6, and Qwen2.5-7B generations.
 
 ```bash
-python scripts/convert_human_eval_xlsx.py
-python scripts/run_imt_human_eval.py --help
+python scripts/run_imt.py --dataset human_eval --all
 python scripts/eval_imt_human_eval.py --help
 ```
 
