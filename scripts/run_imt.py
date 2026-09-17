@@ -1,7 +1,7 @@
 """
 scripts/run_imt.py
 ==================
-Run the IMT audit workflow (workflows/imt_audit_workflow.py) for one or all
+Run the IMT audit workflow (workflows/singleturn_iu_audit_workflow.py) for one or all
 model presets, against either the main DeceptionBench-style dataset or the
 human-eval target-model datasets.
 
@@ -49,7 +49,7 @@ from project_paths import (
     model_dataset_path,
 )
 
-WORKFLOW = ROOT / "workflows" / "imt_audit_workflow.py"
+WORKFLOW = ROOT / "workflows" / "singleturn_iu_audit_workflow.py"
 DEFAULT_MODEL = "azure_gpt4o"
 DEFAULT_WORKERS = 8
 ALL_TARGETS = HUMAN_EVAL_TARGETS

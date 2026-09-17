@@ -24,7 +24,7 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   ├── google_genai_llm.py         # Google Gemini
 │   └── openai_llm.py               # Official OpenAI API (reference impl.)
 ├── workflows/                  # Pipeline entry points
-│   ├── imt_audit_workflow.py       # Main single-turn DECOR pipeline
+│   ├── singleturn_iu_audit_workflow.py # Main single-turn DECOR pipeline
 │   ├── multiturn_iu_sis_workflow.py # Main multi-turn DECOR pipeline
 │   ├── imt_scores.py               # Shared scoring/AUROC utilities
 │   └── baseline_scores.py          # Shared baseline scoring utilities
@@ -101,7 +101,7 @@ Only the keys for the providers/models you plan to run are required. See `config
 
 ```bash
 # Run the pipeline for one model
-python workflows/imt_audit_workflow.py --model azure_gpt4o
+python workflows/singleturn_iu_audit_workflow.py --model azure_gpt4o
 
 # Evaluate AUROC / F1 / etc. against human labels
 python scripts/eval_imt.py --all
