@@ -19,17 +19,17 @@ Output format mirrors run_simple_llm_judge.py so it is compatible with the
 same evaluation scripts (replace "label" → numeric "score").
 
 Usage:
-    python experiment/baselines/blackbox/run_scheming_judge.py \\
+    python baselines/scheming_judge/run_scheming_judge.py \\
         --model azure_gpt4o \\
         --input data/models/deepseek_r1/dataset_with_labels.json \\
         --output results/baselines/scheming_judge_azure_gpt4o.json
 
     # Parallel workers:
-    python experiment/baselines/blackbox/run_scheming_judge.py \\
+    python baselines/scheming_judge/run_scheming_judge.py \\
         --model azure_claude_sonnet46 --workers 4
 
     # Multiple runs:
-    python experiment/baselines/blackbox/run_scheming_judge.py \\
+    python baselines/scheming_judge/run_scheming_judge.py \\
         --model azure_gpt4o --runs 3
 """
 
@@ -40,7 +40,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
 
 from config import get_llm_config

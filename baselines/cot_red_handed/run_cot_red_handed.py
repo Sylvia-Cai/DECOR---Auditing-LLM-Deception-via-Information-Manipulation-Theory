@@ -15,10 +15,10 @@ where normalized = raw / 100.
 Supports all model presets via --model (see config.LLM_PRESETS).
 
 Usage:
-    python experiment/baselines/blackbox/run_cot_red_handed.py \\
+    python baselines/cot_red_handed/run_cot_red_handed.py \\
         --model azure_gpt4o
 
-    python experiment/baselines/blackbox/run_cot_red_handed.py \\
+    python baselines/cot_red_handed/run_cot_red_handed.py \\
         --model azure_gpt4o --workers 4 \\
         --input data/models/deepseek_r1/dataset_with_labels.json \\
         --output results/baselines/cot_red_handed/cot_red_handed_azure_gpt4o_results.json
@@ -33,7 +33,7 @@ from pathlib import Path
 
 import yaml
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
 
 from config import get_llm_config

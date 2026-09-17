@@ -1,7 +1,7 @@
-"""CoT-Red-Handed baseline on OpenDeception: round-by-round detection.
+"""Scheming-judge baseline on OpenDeception: round-by-round detection.
 
-Applies the existing CoT-Red-Handed monitor scoring to each round independently.
-Stores per-round response/thought raw and normalized scores plus hybrid score.
+Applies the existing scheming scoring prompt to each round independently and
+stores per-round suspicion scores for both thought and response.
 """
 
 from __future__ import annotations
@@ -14,19 +14,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from config import DEFAULT_LLM_PRESET, get_llm_config  # noqa: E402
 from llm_interface.factory import create_llm  # noqa: E402
-from baselines.run_cot_red_handed import (  # noqa: E402
-    load_prompt,
-    score_sample,
+from baselines.scheming_judge.run_scheming_judge import (  # noqa: E402
+    _PROMPT_BODY,
+    _extract_score,
 )
 
 
 from project_paths import OPEN_DECEPTION_INPUT as DEFAULT_INPUT
-DEFAULT_OUTPUT = PROJECT_ROOT / "results" / "open_deception" / "cot_red_handed_open_deception_round.json"
+DEFAULT_OUTPUT = PROJECT_ROOT / "results" / "open_deception" / "scheming_judge_open_deception_round.json"
 
 
 def _load_dialogues(path: Path) -> List[Dict[str, Any]]:
@@ -61,8 +61,26 @@ def _build_history(prior_rounds: list) -> str:
     return "\n".join(lines)
 
 
+def _thought_prompt(history: str, current_user: str, thought: str) -> str:
+    body, answer_line = _PROMPT_BODY.rsplit("\n", 1)
+    history_part = f"[Conversation History]:\n{history}\n\n" if history else ""
+    return f"{history_part}{body}\n\n[Current Round User]: {current_user}\n[AI Thought]: {thought}\n\n{answer_line}"
+
+
+def _response_prompt(history: str, current_user: str, response: str) -> str:
+    body, answer_line = _PROMPT_BODY.rsplit("\n", 1)
+    history_part = f"[Conversation History]:\n{history}\n\n" if history else ""
+    return f"{history_part}{body}\n\n[Current Round User]: {current_user}\n[AI Response]: {response}\n\n{answer_line}"
+
+
+def _call_judge(llm, judge_prompt: str) -> tuple[float, str]:
+    raw = llm.generate_with_retry(judge_prompt)
+    score = _extract_score(raw)
+    return score, raw
+
+
 def _aggregate_scores(values: List[float]) -> Dict[str, float]:
-    valid = [float(v) for v in values if isinstance(v, (int, float))]
+    valid = [float(v) for v in values if isinstance(v, (int, float)) and v >= 0]
     if not valid:
         return {"min": 0.0, "max": 0.0, "mean": 0.0, "last": 0.0}
     return {
@@ -75,7 +93,6 @@ def _aggregate_scores(values: List[float]) -> Dict[str, float]:
 
 def _judge_dialogue(
     llm,
-    prompt_templates: Dict[str, Any],
     dialogue: Dict[str, Any],
     dialogue_idx: int,
     total: int,
@@ -93,71 +110,44 @@ def _judge_dialogue(
     for ridx, rd in enumerate(rounds, start=1):
         history = _build_history(rounds[: ridx - 1])
         current_user = (rd.get("user") or "").strip()
-        input_with_history = (
-            f"{history}\nRound {rd.get('round_id', ridx)} User: {current_user}".strip()
-            if history else current_user
-        )
-        response_text = (rd.get("ai_speech") or "").strip()
         thought_text = (rd.get("ai_thought") or "").strip()
+        response_text = (rd.get("ai_speech") or "").strip()
 
-        out_round = {"round_id": rd.get("round_id", ridx), "eval": {}}
-        thought_scores: Dict[str, Any] = {}
-        response_scores: Dict[str, Any] = {}
+        thought_score = -1.0
+        thought_raw = ""
+        response_score = -1.0
+        response_raw = ""
         errors: List[str] = []
 
-        # Score thought independently (empty action so only thought signal is used)
         try:
-            thought_scores = score_sample(
-                llm=llm,
-                prompt_templates=prompt_templates,
-                input_text=input_with_history,
-                action="",
-                cot=thought_text,
-            )
+            thought_score, thought_raw = _call_judge(llm, _thought_prompt(history, current_user, thought_text))
         except Exception as exc:  # noqa: BLE001
-            thought_scores = {
-                "thought_raw": 50.0, "thought_normalized": 0.5,
-                "thought_monitor_output": "",
-            }
             errors.append(f"thought: {type(exc).__name__}: {exc}")
 
-        # Score response independently (empty cot so only response signal is used)
         try:
-            response_scores = score_sample(
-                llm=llm,
-                prompt_templates=prompt_templates,
-                input_text=input_with_history,
-                action=response_text,
-                cot="",
-            )
+            response_score, response_raw = _call_judge(llm, _response_prompt(history, current_user, response_text))
         except Exception as exc:  # noqa: BLE001
-            response_scores = {
-                "response_raw": 50.0, "response_normalized": 0.5,
-                "response_monitor_output": "",
-            }
             errors.append(f"response: {type(exc).__name__}: {exc}")
 
-        out_round["eval"] = {
-            "thought_raw": thought_scores.get("thought_raw", 50.0),
-            "thought_normalized": thought_scores.get("thought_normalized", 0.5),
-            "thought_monitor_output": thought_scores.get("thought_monitor_output", ""),
-            "response_raw": response_scores.get("response_raw", 50.0),
-            "response_normalized": response_scores.get("response_normalized", 0.5),
-            "response_monitor_output": response_scores.get("response_monitor_output", ""),
-            "hybrid_score": (
-                thought_scores.get("thought_normalized", 0.5) * 0.5
-                + response_scores.get("response_normalized", 0.5) * 0.5
-            ),
+        item = {
+            "round_id": rd.get("round_id", ridx),
+            "eval": {
+                "thought_score": float(thought_score),
+                "thought_raw": thought_raw,
+                "response_score": float(response_score),
+                "response_raw": response_raw,
+                # combined: take the higher suspicion score (shared label)
+                "combined_score": float(max(thought_score if thought_score >= 0 else 0.0,
+                                           response_score if response_score >= 0 else 0.0)),
+            },
         }
         if errors:
-            out_round["error"] = " | ".join(errors)
-        round_results.append(out_round)
+            item["error"] = " | ".join(errors)
+        round_results.append(item)
 
-    thought_raw = [r.get("eval", {}).get("thought_raw", 50.0) for r in round_results]
-    response_raw = [r.get("eval", {}).get("response_raw", 50.0) for r in round_results]
-    thought_norm = [r.get("eval", {}).get("thought_normalized", 0.5) for r in round_results]
-    response_norm = [r.get("eval", {}).get("response_normalized", 0.5) for r in round_results]
-    hybrid = [r.get("eval", {}).get("hybrid_score", 0.5) for r in round_results]
+    thought_scores = [r.get("eval", {}).get("thought_score", -1.0) for r in round_results]
+    response_scores = [r.get("eval", {}).get("response_score", -1.0) for r in round_results]
+    combined_scores = [r.get("eval", {}).get("combined_score", 0.0) for r in round_results]
 
     out = {
         "_order": dialogue_idx,
@@ -168,17 +158,17 @@ def _judge_dialogue(
         "round_count": len(rounds),
         "round_results": round_results,
         "dialogue_scores": {
-            "thought_raw": _aggregate_scores(thought_raw),
-            "response_raw": _aggregate_scores(response_raw),
-            "thought": _aggregate_scores(thought_norm),
-            "response": _aggregate_scores(response_norm),
-            "hybrid": _aggregate_scores(hybrid),
+            "thought": _aggregate_scores(thought_scores),
+            "response": _aggregate_scores(response_scores),
+            # combined = max(thought, response) per round, then aggregated
+            "combined": _aggregate_scores(combined_scores),
         },
     }
 
     print(
         f"[{dialogue_idx}/{total}] {out['source_file']} | "
-        f"hybrid_mean={out['dialogue_scores']['hybrid']['mean']:.3f}"
+        f"thought_mean={out['dialogue_scores']['thought']['mean']:.3f} | "
+        f"response_mean={out['dialogue_scores']['response']['mean']:.3f}"
     )
     return out
 
@@ -191,7 +181,7 @@ def _output_path_for_run(base_path: Path, run_idx: int, runs: int) -> Path:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="CoT-Red-Handed round baseline for OpenDeception")
+    parser = argparse.ArgumentParser(description="Scheming-judge round baseline for OpenDeception")
     parser.add_argument("--model", default=DEFAULT_LLM_PRESET, help="LLM preset key from config.py")
     parser.add_argument("--input", default=str(DEFAULT_INPUT), help="Input OpenDeception JSON")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output JSON path")
@@ -233,7 +223,6 @@ def main() -> None:
 
     llm_config = get_llm_config(args.model)
     provider = llm_config.get("provider", "azure_openai")
-    prompt_templates = load_prompt()
 
     for run_idx in range(1, args.runs + 1):
         run_output = _output_path_for_run(output_path, run_idx, args.runs)
@@ -244,13 +233,13 @@ def main() -> None:
         total = len(dialogues)
         if args.workers <= 1:
             for i, d in enumerate(dialogues, start=1):
-                judged = _judge_dialogue(llm, prompt_templates, d, i, total, positives, negatives)
+                judged = _judge_dialogue(llm, d, i, total, positives, negatives)
                 if judged is not None:
                     out_dialogues.append(judged)
         else:
             with ThreadPoolExecutor(max_workers=args.workers) as executor:
                 futures = {
-                    executor.submit(_judge_dialogue, llm, prompt_templates, d, i, total, positives, negatives): i
+                    executor.submit(_judge_dialogue, llm, d, i, total, positives, negatives): i
                     for i, d in enumerate(dialogues, start=1)
                 }
                 for future in as_completed(futures):

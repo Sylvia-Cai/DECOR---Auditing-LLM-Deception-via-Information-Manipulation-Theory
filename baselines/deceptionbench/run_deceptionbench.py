@@ -11,17 +11,17 @@ labels for both sides:
 Input/output format is aligned with other blackbox baselines.
 
 Usage:
-    python experiment/baselines/blackbox/run_deceptionbench.py \
+    python baselines/deceptionbench/run_deceptionbench.py \
         --model azure_gpt4o \
         --input data/models/deepseek_r1/dataset_with_labels.json \
         --output results/baselines/deceptionbench_azure_gpt4o.json
 
     # Parallel workers:
-    python experiment/baselines/blackbox/run_deceptionbench.py \
+    python baselines/deceptionbench/run_deceptionbench.py \
         --model azure_gpt4o --workers 4
 
     # Multiple runs:
-    python experiment/baselines/blackbox/run_deceptionbench.py \
+    python baselines/deceptionbench/run_deceptionbench.py \
         --model azure_gpt4o --runs 3
 """
 
@@ -32,7 +32,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.append(str(PROJECT_ROOT))
 
 from config import get_llm_config

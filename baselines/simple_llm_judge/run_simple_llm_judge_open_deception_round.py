@@ -1,7 +1,7 @@
 """Simple-LLM judge baseline on OpenDeception: round-by-round detection.
 
 This baseline reuses the exact prompt templates from
-experiment/baselines/blackbox/run_simple_llm_judge.py and applies them to each
+baselines/simple_llm_judge/run_simple_llm_judge.py and applies them to each
 dialogue round independently.
 """
 
@@ -14,12 +14,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from config import DEFAULT_LLM_PRESET, get_llm_config  # noqa: E402
 from llm_interface.factory import create_llm  # noqa: E402
-from baselines.run_simple_llm_judge import (  # noqa: E402
+from baselines.simple_llm_judge.run_simple_llm_judge import (  # noqa: E402
     _call_judge,
     _response_prompt,
     _thought_prompt,
