@@ -41,11 +41,10 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │       └── run_scheming_judge.py, run_scheming_judge_open_deception_round.py
 ├── scripts/                    # Evaluation / analysis entry points
 │   ├── run_imt.py                          # Run the single-turn pipeline (main or human-eval dataset)
-│   ├── eval_imt.py                         # Compute AUROC/F1/etc. for DECOR results
+│   ├── eval_imt.py                         # Compute AUROC/F1/etc. for DECOR results (main or human-eval dataset)
 │   ├── eval_baselines.py                   # Evaluate all 5 single-turn baselines
 │   ├── parse_open_deception.py             # Parse raw OpenDeception-C187 GPT-4o transcripts
-│   ├── eval_multiturn_open_deception.py    # Multi-turn AUROC evaluation (DECOR vs. one baseline)
-│   └── eval_imt_human_eval.py              # Evaluate the human-eval model set
+│   └── eval_multiturn_open_deception.py    # Multi-turn AUROC evaluation (DECOR vs. one baseline)
 ├── data/
 │   ├── models/                                 # One dataset per audited model (150 prompts x 4
 │   │   │                                          pressure-framing (L2) variants = 600 scenarios)
@@ -147,7 +146,7 @@ Multi-turn counterparts (`baselines/<family>/run_*_open_deception_round.py`) run
 
 ```bash
 python scripts/run_imt.py --dataset human_eval --all
-python scripts/eval_imt_human_eval.py --help
+python scripts/eval_imt.py --dataset human_eval --help
 ```
 
 ---

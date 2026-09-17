@@ -1,21 +1,32 @@
 """
 scripts/eval_imt.py
 ====================
-Evaluate IMT audit results: AUROC + 5-fold binary metrics per model.
+Evaluate IMT audit results (produced by scripts/run_imt.py): AUROC + 5-fold
+binary metrics, against either the main DeepSeek-R1 ground truth or the
+human-eval target-model ground truth.
 
 Usage:
-    # Evaluate default model (azure_gpt4o)
+    # Main dataset — default model (azure_gpt4o)
     python scripts/eval_imt.py
 
-    # Evaluate specific models
+    # Main dataset — specific models
     python scripts/eval_imt.py --models azure_gpt4o azure_claude_sonnet46
 
-    # Evaluate ALL models found in results/imt_audit/
+    # Main dataset — ALL models found in results/imt_audit/
     python scripts/eval_imt.py --all
 
-Output (results/eval/imt/):
-    <model>.json          per-model detailed metrics
-    summary.txt           human-readable table across all evaluated models
+    # Human-eval datasets — all targets, all auditors found
+    python scripts/eval_imt.py --dataset human_eval
+
+    # Human-eval datasets — restrict to one target / specific auditors
+    python scripts/eval_imt.py --dataset human_eval --targets gpt4o
+    python scripts/eval_imt.py --dataset human_eval --auditors azure_gpt4o azure_claude_sonnet46
+
+Output:
+    Main dataset:       results/eval/imt/<model>.json, results/eval/imt/summary.txt
+    Human-eval dataset: results/eval/imt_human_eval/<target>/<auditor>.json
+                        results/eval/imt_human_eval/<target>/summary.txt
+                        results/eval/imt_human_eval/summary.txt   (combined across targets)
 """
 
 import argparse
@@ -26,7 +37,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from project_paths import IMT_AUDIT_RESULTS_DIR, EVAL_RESULTS_DIR
+from project_paths import (
+    HUMAN_EVAL_AUDIT_RESULTS_DIR,
+    HUMAN_EVAL_EVAL_RESULTS_DIR,
+    HUMAN_EVAL_TARGETS,
+    IMT_AUDIT_RESULTS_DIR,
+    EVAL_RESULTS_DIR,
+    model_dataset_path,
+)
 from workflows.imt_scores import (
     DEFAULT_LABELS,
     DOMAINS, POOLING_STRATEGIES, RESPONSE_STRATEGY, SIDES, THOUGHT_STRATEGY,
@@ -39,6 +57,7 @@ from workflows.imt_scores import (
 DEFAULT_MODEL = "azure_gpt4o"
 OUT_DIR = EVAL_RESULTS_DIR / "imt"
 LABELED_OUT_DIR = ROOT / "results" / "imt_audit_with_label"
+ALL_TARGETS = HUMAN_EVAL_TARGETS
 
 METRIC_LABELS = {
     "f1":           "Macro-F1",
@@ -178,12 +197,12 @@ def build_summary(all_results: dict) -> str:
         if not result:
             continue
         lines.append(f"Model: {model}  ({result['runs']} run(s))")
-        
+
         # Data availability summary
         if "data_counts" in result:
             for dc in result["data_counts"]:
                 lines.append(f"  {dc['file']}: {dc['total']} total, thought={dc['thought']} valid, response={dc['response']} valid")
-        
+
         auroc_b  = result["auroc"]
         binary_b = result["binary"]
 
@@ -208,22 +227,15 @@ def build_summary(all_results: dict) -> str:
                         m = base.get(f"{key}_mean", float("nan"))
                         s = base.get(f"{key}_std",  float("nan"))
                 lines.append(f"    {label:<20}: {_fmt(m, s)}")
-        
+
         lines.append("")
 
     return "\n".join(lines)
 
 
-# ── Entry point ───────────────────────────────────────────────────────────────
+# ── Dataset branches ─────────────────────────────────────────────────────────
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Evaluate IMT audit results")
-    parser.add_argument("--models", nargs="+", default=[DEFAULT_MODEL],
-                        help=f"Model preset keys to evaluate (default: {DEFAULT_MODEL})")
-    parser.add_argument("--all", action="store_true",
-                        help="Evaluate all models found in results/imt_audit/")
-    args = parser.parse_args()
-
+def _eval_main_dataset(args) -> None:
     model_filter = None if args.all else args.models
     model_files  = find_model_files(IMT_AUDIT_RESULTS_DIR, model_filter)
 
@@ -248,6 +260,87 @@ def main() -> None:
     with open(summary_path, "w", encoding="utf-8") as f:
         f.write(build_summary(all_results))
     print(f"\nSummary: {summary_path.relative_to(ROOT)}")
+
+
+def _eval_human_eval_dataset(args) -> None:
+    HUMAN_EVAL_EVAL_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    combined_lines = []
+
+    for target in args.targets:
+        results_dir = HUMAN_EVAL_AUDIT_RESULTS_DIR / target
+        labels_path = model_dataset_path(target)
+
+        if not results_dir.exists():
+            print(f"[WARN] No audit results dir for target '{target}': {results_dir}")
+            continue
+
+        model_files = find_model_files(results_dir, args.auditors)
+        if not model_files:
+            print(f"[WARN] No IMT result files found in {results_dir}")
+            continue
+
+        print(f"\n=== target: {target}  ({len(model_files)} auditor(s)) ===")
+        out_dir = HUMAN_EVAL_EVAL_RESULTS_DIR / target
+        labeled_out_dir = ROOT / "results" / "imt_audit_human_eval_with_label" / target
+        out_dir.mkdir(parents=True, exist_ok=True)
+        labeled_out_dir.mkdir(parents=True, exist_ok=True)
+
+        all_results = {}
+        for auditor, files in sorted(model_files.items()):
+            result = eval_model(auditor, files, labels_path=labels_path, labeled_out_dir=labeled_out_dir)
+            all_results[auditor] = result
+            if not result:
+                continue
+
+            out = out_dir / f"{auditor}.json"
+            with open(out, "w", encoding="utf-8") as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
+            print(f"    -> {out.relative_to(ROOT)}")
+
+        # Merge in previously cached per-auditor results (e.g. from an earlier run with
+        # a different --auditors filter) so the summary always covers everything on disk.
+        for cached in out_dir.glob("*.json"):
+            auditor = cached.stem
+            if auditor not in all_results:
+                with open(cached, encoding="utf-8") as f:
+                    all_results[auditor] = json.load(f)
+
+        summary = build_summary(all_results)
+        summary_path = out_dir / "summary.txt"
+        with open(summary_path, "w", encoding="utf-8") as f:
+            f.write(summary)
+        print(f"  Summary: {summary_path.relative_to(ROOT)}")
+
+        combined_lines.append(f"##### target: {target} #####\n")
+        combined_lines.append(summary)
+        combined_lines.append("\n")
+
+    combined_path = HUMAN_EVAL_EVAL_RESULTS_DIR / "summary.txt"
+    with open(combined_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(combined_lines))
+    print(f"\nCombined summary: {combined_path.relative_to(ROOT)}")
+
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Evaluate IMT audit results")
+    parser.add_argument("--dataset", choices=("main", "human_eval"), default="main",
+                        help="Which dataset to evaluate against (default: main)")
+    parser.add_argument("--models", nargs="+", default=[DEFAULT_MODEL],
+                        help=f"[--dataset main] Model preset keys to evaluate (default: {DEFAULT_MODEL})")
+    parser.add_argument("--all", action="store_true",
+                        help="[--dataset main] Evaluate all models found in results/imt_audit/")
+    parser.add_argument("--targets", nargs="+", default=ALL_TARGETS, choices=ALL_TARGETS,
+                        help=f"[--dataset human_eval] Target-model datasets to evaluate (default: all of {ALL_TARGETS})")
+    parser.add_argument("--auditors", nargs="+", default=None,
+                        help="[--dataset human_eval] Auditor preset keys to evaluate (default: all found on disk)")
+    args = parser.parse_args()
+
+    if args.dataset == "human_eval":
+        _eval_human_eval_dataset(args)
+    else:
+        _eval_main_dataset(args)
 
 
 if __name__ == "__main__":
