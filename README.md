@@ -28,17 +28,13 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   ├── multiturn_iu_sis_workflow.py # Main multi-turn DECOR pipeline
 │   ├── imt_scores.py               # Shared scoring/AUROC utilities
 │   └── baseline_scores.py          # Shared baseline scoring utilities
-├── baselines/                  # One runner per black-box baseline (single-turn +
-│   │                              multi-turn "_open_deception_round" counterpart)
-│   ├── run_simple_llm_judge.py, run_simple_llm_judge_open_deception_{round,dialogue}.py
-│   │                                    # Zero-shot
-│   ├── run_simple_llm_judge_fewshot.py # Few-shot
-│   ├── run_deceptionbench.py, run_deceptionbench_open_deception_round.py
-│   │                                    # DeceptionBench (single joint thought+response call)
-│   ├── run_cot_red_handed.py, run_cot_red_handed_open_deception_round.py
-│   │                                    # CoT Red-Handed
-│   ├── run_scheming_judge.py, run_scheming_judge_open_deception_round.py
-│   │                                    # Constitutional Monitor
+├── baselines/                  # One runner per black-box baseline, each with a
+│   │                              single-turn and a multi-turn "_open_deception_round" form
+│   ├── run_simple_llm_judge.py, run_simple_llm_judge_open_deception_round.py    # Zero-shot
+│   ├── run_simple_llm_judge_fewshot.py                                         # Few-shot
+│   ├── run_deceptionbench.py, run_deceptionbench_open_deception_round.py       # DeceptionBench
+│   ├── run_cot_red_handed.py, run_cot_red_handed_open_deception_round.py       # CoT Red-Handed
+│   ├── run_scheming_judge.py, run_scheming_judge_open_deception_round.py       # Constitutional Monitor
 │   └── cot_red_handed/                 # CoT Red-Handed monitor support code
 ├── scripts/                    # Evaluation / analysis entry points
 │   ├── run_imt.py                          # Run the single-turn pipeline for one/all models
@@ -46,7 +42,7 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 │   ├── eval_baselines.py                   # Evaluate Zero-shot/Few-shot
 │   ├── eval_scheming_judge.py              # Evaluate Constitutional Monitor
 │   ├── eval_cot_red_handed.py              # Evaluate CoT Red-Handed (per-score-key breakdown)
-│   ├── parse_open_deception.py             # Parse raw OpenDeception-C187 transcripts
+│   ├── parse_open_deception.py             # Parse raw OpenDeception-C187 GPT-4o transcripts
 │   ├── eval_multiturn_open_deception.py    # Multi-turn AUROC evaluation (DECOR vs. one baseline)
 │   ├── convert_human_eval_xlsx.py          # Convert human-annotated GT spreadsheet to JSON
 │   ├── run_imt_human_eval.py               # Run DECOR over the human-eval model set
@@ -54,9 +50,13 @@ This repository contains the final DECOR pipeline (single-turn and multi-turn), 
 ├── data/
 │   ├── deepseek_dataset_150_no_label.json     # 150 prompts x 4 pressure-framing (L2) variants
 │   ├── deepseek_dataset_150_with_labels.json  # + human-annotated ground truth (DeepSeek-R1)
-│   ├── open_deception_gpt4o_en.json           # 47 kept GPT-4o multi-turn dialogues
-│   ├── OpenDeception-C187/                    # Source multi-turn benchmark (Wu et al., 2025)
-│   └── human_eval_models/, human_eval_final_gt_*.xlsx  # Human-annotated GT for additional models
+│   ├── open_deception_gpt4o_en.json           # 47 kept GPT-4o multi-turn dialogues (curated)
+│   ├── OpenDeception-C187/                    # Raw source for the 50 GPT-4o transcripts above
+│   │   ├── data/English/GPT-4o/                   # (Wu et al., 2025 — only the slice we use)
+│   │   └── examples.py                            # Per-scenario goal text, read by parse_open_deception.py
+│   ├── human_eval_models/                     # Per-model no-label/with-labels JSON (GPT-4o,
+│   │                                             Claude Sonnet 4.6, Qwen2.5-7B)
+│   └── human_eval_final_gt_202609_gpt_claude_qwen.xlsx  # Source annotation spreadsheet
 ├── config.py                   # LLM presets and API configuration
 ├── project_paths.py            # Canonical path constants
 └── requirements.txt
@@ -130,7 +130,7 @@ python scripts/eval_scheming_judge.py --input-dir results/baselines
 python scripts/eval_cot_red_handed.py
 ```
 
-Multi-turn counterparts (`baselines/run_*_open_deception_round.py`, plus `run_simple_llm_judge_open_deception_dialogue.py`) run the same judges over `data/open_deception_gpt4o_en.json`; evaluate them with `scripts/eval_multiturn_open_deception.py --dialogue-path` / `--round-path` pointed at the resulting file.
+Multi-turn counterparts (`baselines/run_*_open_deception_round.py`) run the same judges over `data/open_deception_gpt4o_en.json`, one round at a time, then aggregate per dialogue (matching the paper's Appendix C.1 protocol — cumulative context, max-pooled across turns). Evaluate any of them against DECOR with `scripts/eval_multiturn_open_deception.py --round-path <file> --target {thought,response}`; the evaluator auto-detects whether the file uses binary per-round labels (Zero-shot, DeceptionBench) or continuous per-round scores (CoT Red-Handed, Constitutional Monitor).
 
 ### Human-annotated ground truth for additional models
 

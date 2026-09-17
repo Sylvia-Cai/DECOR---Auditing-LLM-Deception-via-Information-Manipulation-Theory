@@ -25,7 +25,7 @@ from baselines.run_scheming_judge import (  # noqa: E402
 )
 
 
-DEFAULT_INPUT = PROJECT_ROOT / "results" / "open_deception" / "open_deception_gpt4o_en.json"
+DEFAULT_INPUT = PROJECT_ROOT / "data" / "open_deception_gpt4o_en.json"
 DEFAULT_OUTPUT = PROJECT_ROOT / "results" / "open_deception" / "scheming_judge_open_deception_round.json"
 
 
