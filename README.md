@@ -99,13 +99,3 @@ python scripts/eval_imt.py --dataset human_eval
 
 Code is [MIT](LICENSE). `data/open_deception/OpenDeception-C187/` is third-party data (Wu et al., 2025) redistributed under its own terms — not covered by the MIT license.
 
-## Citation
-
-```bibtex
-@inproceedings{decor2026,
-  title     = {DECOR: Auditing LLM Deception via Information Manipulation Theory},
-  author    = {},
-  booktitle = {},
-  year      = {2026}
-}
-```
