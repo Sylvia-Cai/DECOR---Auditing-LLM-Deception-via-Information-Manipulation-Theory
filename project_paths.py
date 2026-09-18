@@ -22,9 +22,7 @@ FIGURES_DIR = RESULTS_DIR / "figures"
 SINGLETURN_DIR = DATA_DIR / "singleturn"
 
 ALL_MODEL_TARGETS = ["deepseek_r1", "gpt4o", "claude_sonnet46", "qwen25_7b"]
-# The paper's primary single-turn dataset (DeepSeek-R1 generations); the other
-# three targets extend human-annotated ground truth to additional models.
-HUMAN_EVAL_TARGETS = ["gpt4o", "claude_sonnet46", "qwen25_7b"]
+HUMAN_EVAL_TARGETS = ALL_MODEL_TARGETS
 
 
 def model_dataset_path(target: str) -> Path:

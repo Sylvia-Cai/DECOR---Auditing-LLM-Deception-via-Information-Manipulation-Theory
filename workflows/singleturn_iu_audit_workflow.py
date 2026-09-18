@@ -77,10 +77,7 @@ def _public_llm_metadata(llm_config: Dict[str, Any]) -> Dict[str, Any]:
     keys = (
         "provider",
         "model_name",
-        "deployment_name",
         "base_url",
-        "azure_endpoint",
-        "api_version",
         "temperature",
         "max_completion_tokens",
     )

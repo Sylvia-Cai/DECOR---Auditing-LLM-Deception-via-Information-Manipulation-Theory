@@ -16,12 +16,12 @@ Supports all model presets via --model (see config.LLM_PRESETS).
 
 Usage:
     python baselines/cot_red_handed/run_cot_red_handed.py \\
-        --model azure_gpt4o
+        --model openai_gpt4o
 
     python baselines/cot_red_handed/run_cot_red_handed.py \\
-        --model azure_gpt4o --workers 4 \\
+        --model openai_gpt4o --workers 4 \\
         --input data/singleturn/deepseek_r1/dataset_with_labels.json \\
-        --output results/baselines/cot_red_handed/cot_red_handed_azure_gpt4o_results.json
+        --output results/baselines/cot_red_handed/cot_red_handed_openai_gpt4o_results.json
 """
 
 import argparse
@@ -212,7 +212,7 @@ def run(
 ) -> None:
     # Load config + LLM
     config = get_llm_config(model)
-    provider = config.get("provider", "azure_openai")
+    provider = config.get("provider", "openai")
     llm = create_llm(config)
 
     # Load prompt templates
@@ -284,8 +284,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="CoT-Red-Handed deception monitor baseline")
     parser.add_argument(
         "--model",
-        default="azure_gpt4o",
-        help="LLM preset name (see config.LLM_PRESETS). Default: azure_gpt4o",
+        default="openai_gpt4o",
+        help="LLM preset name (see config.LLM_PRESETS). Default: openai_gpt4o",
     )
     parser.add_argument(
         "--input",

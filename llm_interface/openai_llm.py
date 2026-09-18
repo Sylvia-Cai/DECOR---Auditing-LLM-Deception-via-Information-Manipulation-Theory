@@ -6,28 +6,16 @@ from .base_llm import BaseLLM
 class OpenAILLM(BaseLLM):
     """
     LLM interface for any OpenAI-protocol-compatible endpoint: the official
-    OpenAI API, Azure OpenAI Service, Azure AI Foundry OpenAI-compatible
-    deployments (DeepSeek, Grok, etc.), OpenRouter, SiliconFlow, and any
-    other provider that speaks the OpenAI chat-completions format.
+    OpenAI API, OpenRouter, SiliconFlow, and any other provider that speaks
+    the OpenAI chat-completions format.
 
     Reference implementation for paper reproducibility — to use a different
     vendor, just point ``base_url``/``api_key`` at it (see README).
 
-    Dispatch:
-        If ``api_version`` is set, uses ``openai.AzureOpenAI`` (true Azure
-        OpenAI Service deployments — requires ``azure_endpoint``,
-        ``api_version``, ``deployment_name``).
-        Otherwise uses ``openai.OpenAI`` with a custom ``base_url`` (or
-        ``azure_endpoint`` as an alias) — this covers the official API and
-        every other OpenAI-compatible provider.
-
     Config keys:
-        api_key               — API key for the target provider
-        model_name             — Model identifier (e.g. "gpt-4o"); or
-        deployment_name        — takes priority over model_name when set
-                                  (Azure/Foundry-style deployment naming)
-        base_url / azure_endpoint — API base URL (default: official OpenAI)
-        api_version            — Azure OpenAI API version (Azure OpenAI Service only)
+        api_key                — API key for the target provider
+        model_name              — Model identifier (e.g. "gpt-4o")
+        base_url                — API base URL (default: official OpenAI)
         max_completion_tokens  — Output token budget (default 3000)
         temperature             — Sampling temperature (default 0.0)
         top_p                   — Nucleus sampling parameter (default 1.0)
@@ -37,8 +25,7 @@ class OpenAILLM(BaseLLM):
         legacy_max_tokens       — If True, send the older ``max_tokens`` param
                                   instead of ``max_completion_tokens`` and omit
                                   top_p/extra passthrough params. Needed for
-                                  older OpenAI-compatible deployments (e.g.
-                                  Azure AI Foundry's DeepSeek endpoint) that
+                                  older OpenAI-compatible deployments that
                                   don't understand the newer param names.
     """
 
@@ -47,26 +34,12 @@ class OpenAILLM(BaseLLM):
         if not self.config.get("api_key"):
             raise ValueError("OpenAILLM requires 'api_key' in config.")
 
-        if self.config.get("api_version"):
-            required = ["azure_endpoint", "deployment_name"]
-            missing = [k for k in required if not self.config.get(k)]
-            if missing:
-                raise ValueError(f"OpenAILLM (Azure OpenAI Service) missing required config keys: {', '.join(missing)}")
-            self.client = openai.AzureOpenAI(
-                api_version=self.config["api_version"],
-                azure_endpoint=self.config["azure_endpoint"],
-                api_key=self.config["api_key"],
-            )
-        else:
-            self.client = openai.OpenAI(
-                api_key=self.config["api_key"],
-                base_url=self.config.get("base_url", self.config.get("azure_endpoint", "https://api.openai.com/v1")),
-            )
-
-        self.model_name = self.config.get(
-            "deployment_name",
-            self.config.get("model_name", "gpt-4o"),
+        self.client = openai.OpenAI(
+            api_key=self.config["api_key"],
+            base_url=self.config.get("base_url", "https://api.openai.com/v1"),
         )
+
+        self.model_name = self.config.get("model_name", "gpt-4o")
         self.default_max_tokens = self.config.get(
             "max_completion_tokens",
             self.config.get("default_max_tokens", 3000),

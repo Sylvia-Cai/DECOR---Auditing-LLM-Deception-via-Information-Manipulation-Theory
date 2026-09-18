@@ -6,19 +6,19 @@ model presets, against either the main DeceptionBench-style dataset or the
 human-eval target-model datasets.
 
 Usage:
-    # Main dataset — run default model (azure_gpt4o), once
+    # Main dataset — run default model (openai_gpt4o), once
     python scripts/run_imt.py
 
     # Main dataset — run a specific model, 3 times
-    python scripts/run_imt.py --model azure_claude_sonnet46 --runs 3
+    python scripts/run_imt.py --model anthropic_claude_sonnet46 --runs 3
 
     # Main dataset — run ALL models once, skipping ones already done
     python scripts/run_imt.py --all --skip-existing
 
-    # Human-eval datasets — run one auditor against all 3 target-model datasets
-    python scripts/run_imt.py --dataset human_eval --model azure_gpt4o
+    # Human-eval datasets — run one auditor against all target-model datasets
+    python scripts/run_imt.py --dataset human_eval --model openai_gpt4o
 
-    # Human-eval datasets — run ALL auditors against ALL 3 target-model datasets
+    # Human-eval datasets — run ALL auditors against ALL target-model datasets
     python scripts/run_imt.py --dataset human_eval --all
 
     # Human-eval datasets — restrict to specific target-model datasets
@@ -50,7 +50,7 @@ from project_paths import (
 )
 
 WORKFLOW = ROOT / "workflows" / "singleturn_iu_audit_workflow.py"
-DEFAULT_MODEL = "azure_gpt4o"
+DEFAULT_MODEL = "openai_gpt4o"
 DEFAULT_WORKERS = 8
 ALL_TARGETS = HUMAN_EVAL_TARGETS
 

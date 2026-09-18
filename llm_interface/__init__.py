@@ -7,19 +7,19 @@ from .google_genai_llm import GoogleGenAILLM
 
 
 def create_llm(config: Dict[str, Any]):
-    provider = config.get("provider", "azure_openai")
+    provider = config.get("provider", "openai")
 
-    if provider in {"azure_openai", "azure_deepseek", "openai", "openai_compatible", "openrouter"}:
+    if provider in {"openai", "openai_compatible", "openrouter"}:
         return OpenAILLM(config)
-    if provider in {"anthropic", "azure_anthropic"}:
+    if provider == "anthropic":
         return AnthropicLLM(config)
     if provider == "google_genai":
         return GoogleGenAILLM(config)
 
     raise ValueError(
         "Unsupported provider "
-        f"'{provider}'. Expected one of: azure_openai, azure_deepseek, openai, "
-        "openai_compatible, openrouter, anthropic, azure_anthropic, google_genai"
+        f"'{provider}'. Expected one of: openai, openai_compatible, openrouter, "
+        "anthropic, google_genai"
     )
 
 

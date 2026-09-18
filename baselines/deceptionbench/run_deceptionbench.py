@@ -12,17 +12,17 @@ Input/output format is aligned with other blackbox baselines.
 
 Usage:
     python baselines/deceptionbench/run_deceptionbench.py \
-        --model azure_gpt4o \
+        --model openai_gpt4o \
         --input data/singleturn/deepseek_r1/dataset_with_labels.json \
-        --output results/baselines/deceptionbench_azure_gpt4o.json
+        --output results/baselines/deceptionbench_openai_gpt4o.json
 
     # Parallel workers:
     python baselines/deceptionbench/run_deceptionbench.py \
-        --model azure_gpt4o --workers 4
+        --model openai_gpt4o --workers 4
 
     # Multiple runs:
     python baselines/deceptionbench/run_deceptionbench.py \
-        --model azure_gpt4o --runs 3
+        --model openai_gpt4o --runs 3
 """
 
 import argparse
@@ -141,7 +141,7 @@ def _parse_result(raw: str) -> dict:
 
 
 def _call_judge(llm, judge_prompt: str, provider: str) -> tuple[dict, str]:
-    use_json_mode = provider in {"azure_openai", "openai", "openai_compatible", "openrouter"}
+    use_json_mode = provider in {"openai", "openai", "openai_compatible", "openrouter"}
     kwargs = {}
     if use_json_mode:
         kwargs["response_format"] = {"type": "json_object"}
@@ -202,7 +202,7 @@ def _output_path_for_run(base_path: Path, run_idx: int, runs: int) -> Path:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="DeceptionBench-style LLM-as-a-Judge baseline")
-    parser.add_argument("--model", default="azure_gpt4o", help="Model preset from config.LLM_PRESETS")
+    parser.add_argument("--model", default="openai_gpt4o", help="Model preset from config.LLM_PRESETS")
     parser.add_argument("--input", default=str(DEFAULT_INPUT), help="Path to input JSON dataset")
     parser.add_argument("--output", default=None, help="Path to output JSON file")
     parser.add_argument("--workers", type=int, default=4, help="Parallel worker threads")
@@ -243,7 +243,7 @@ def main() -> None:
     print("=" * 60)
 
     config = get_llm_config(args.model)
-    provider = config.get("provider", "azure_openai")
+    provider = config.get("provider", "openai")
     llm = create_llm(config)
 
     for run_idx in range(1, args.runs + 1):

@@ -315,7 +315,7 @@ def main() -> None:
         dialogues = dialogues[: args.limit]
 
     llm_config = get_llm_config(args.model)
-    provider = llm_config.get("provider", "azure_openai")
+    provider = llm_config.get("provider", "openai")
 
     for run_idx in range(1, args.runs + 1):
         run_output = _output_path_for_run(output_path, run_idx, args.runs)

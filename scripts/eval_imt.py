@@ -6,11 +6,11 @@ binary metrics, against either the main DeepSeek-R1 ground truth or the
 human-eval target-model ground truth.
 
 Usage:
-    # Main dataset — default model (azure_gpt4o)
+    # Main dataset — default model (openai_gpt4o)
     python scripts/eval_imt.py
 
     # Main dataset — specific models
-    python scripts/eval_imt.py --models azure_gpt4o azure_claude_sonnet46
+    python scripts/eval_imt.py --models openai_gpt4o anthropic_claude_sonnet46
 
     # Main dataset — ALL models found in results/imt_audit/
     python scripts/eval_imt.py --all
@@ -20,7 +20,7 @@ Usage:
 
     # Human-eval datasets — restrict to one target / specific auditors
     python scripts/eval_imt.py --dataset human_eval --targets gpt4o
-    python scripts/eval_imt.py --dataset human_eval --auditors azure_gpt4o azure_claude_sonnet46
+    python scripts/eval_imt.py --dataset human_eval --auditors openai_gpt4o anthropic_claude_sonnet46
 
 Output:
     Main dataset:       results/eval/imt/<model>.json, results/eval/imt/summary.txt
@@ -54,7 +54,7 @@ from workflows.imt_scores import (
     find_model_files, load_records,
 )
 
-DEFAULT_MODEL = "azure_gpt4o"
+DEFAULT_MODEL = "openai_gpt4o"
 OUT_DIR = EVAL_RESULTS_DIR / "imt"
 LABELED_OUT_DIR = ROOT / "results" / "imt_audit_with_label"
 ALL_TARGETS = HUMAN_EVAL_TARGETS

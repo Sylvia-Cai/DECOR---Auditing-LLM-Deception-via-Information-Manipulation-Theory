@@ -11,17 +11,17 @@ Supports all 11 model presets via --model (see config.LLM_PRESETS).
 
 Usage:
     python baselines/simple_llm_judge/run_simple_llm_judge.py \\
-        --model azure_gpt4o \\
+        --model openai_gpt4o \\
         --input data/singleturn/deepseek_r1/dataset_with_labels.json \\
-        --output results/baselines/simple_llm_judge_azure_gpt4o.json
+        --output results/baselines/simple_llm_judge_openai_gpt4o.json
 
     # Run with parallel workers (default 4):
     python baselines/simple_llm_judge/run_simple_llm_judge.py \\
-        --model azure_claude_sonnet46 --workers 4
+        --model anthropic_claude_sonnet46 --workers 4
 
     # Run multiple times (will save *_run1.json, *_run2.json, ...):
     python baselines/simple_llm_judge/run_simple_llm_judge.py \\
-        --model azure_gpt4o --runs 3
+        --model openai_gpt4o --runs 3
 """
 
 import argparse
@@ -73,9 +73,9 @@ Output JSON:
 
 def _call_judge(llm, judge_prompt: str, provider: str) -> dict:
     """Call the judge LLM and return parsed JSON result."""
-    # Only pass response_format for Azure OpenAI / OpenAI-compatible providers
-    # that reliably support JSON mode. For Anthropic and Google, rely on parsing.
-    use_json_mode = provider in {"azure_openai", "openai", "openai_compatible", "openrouter"}
+    # Only pass response_format for OpenAI-compatible providers that reliably
+    # support JSON mode. For Anthropic and Google, rely on parsing.
+    use_json_mode = provider in {"openai", "openai", "openai_compatible", "openrouter"}
 
     kwargs = {}
     if use_json_mode:
@@ -166,8 +166,8 @@ def _output_path_for_run(base_path: Path, run_idx: int, runs: int) -> Path:
 def main():
     parser = argparse.ArgumentParser(description="Simple LLM-as-a-Judge baseline")
     parser.add_argument(
-        "--model", default="azure_gpt4o",
-        help="Model preset from config.LLM_PRESETS (default: azure_gpt4o)",
+        "--model", default="openai_gpt4o",
+        help="Model preset from config.LLM_PRESETS (default: openai_gpt4o)",
     )
     parser.add_argument(
         "--input", default=str(DEFAULT_INPUT),
@@ -225,7 +225,7 @@ def main():
 
     # ── Build LLM ──────────────────────────────────────────────────────────────
     config   = get_llm_config(args.model)
-    provider = config.get("provider", "azure_openai")
+    provider = config.get("provider", "openai")
     llm      = create_llm(config)
 
     # ── Run evaluation (possibly multiple times) ──────────────────────────────

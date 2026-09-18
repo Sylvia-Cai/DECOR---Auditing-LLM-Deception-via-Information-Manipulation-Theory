@@ -14,7 +14,7 @@ This repo has the final DECOR pipeline (single-turn + multi-turn), its evaluatio
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env        # then set OPENAI_API_KEY=... (official OpenAI, no Azure needed)
+cp .env.example .env        # then set OPENAI_API_KEY=...
 ```
 
 Run DECOR on the single-turn dataset with GPT-4o and evaluate it:
@@ -36,7 +36,7 @@ workflows/      Pipeline entry points (run the agents over a dataset)
 baselines/      5 black-box baselines DECOR is compared against, one folder each
 scripts/        Evaluation entry points (AUROC/F1 etc.) + the OpenDeception parser
 llm_interface/  LLM backends — OpenAI-protocol / Anthropic / Google, picked via config.py
-data/           Datasets: data/singleturn/ (600 scenarios x 4 models) and data/open_deception/
+data/           Datasets: data/singleturn/ (745 labeled responses) and data/open_deception/
 config.py       Model presets — this is where --model values come from
 ```
 
@@ -72,20 +72,20 @@ python scripts/eval_baselines.py --list         # see available families
 python scripts/eval_baselines.py --family simple_llm_judge_zeroshot --all
 ```
 
-(Every command's `--model` default is `azure_gpt4o` — the authors' own Azure deployment. Pass `--model openai_gpt4o` explicitly, as above, unless you've set up the Azure keys in `.env.example` too.)
+(Every command's `--model` defaults to `openai_gpt4o`; the explicit flag above is just for clarity.)
 
 Each baseline also has a `_open_deception_round.py` twin for the multi-turn setting (same `--model` flag), evaluated the same way via `scripts/eval_multiturn_open_deception.py --round-path <file>`.
 
-### Extra human-annotated models
+### Human-annotated evaluation set
 
-`data/singleturn/{gpt4o,claude_sonnet46,qwen25_7b}/` extend the ground truth beyond the paper's primary DeepSeek-R1 set:
+`data/singleturn/` is a single turn human-annotated set of 745 labeled responses:
 
 ```bash
 python scripts/run_imt.py --dataset human_eval --model openai_gpt4o
-python scripts/eval_imt.py --dataset human_eval
-```
 
-(`--all` instead of `--model openai_gpt4o` runs every preset in `config.LLM_PRESETS` as an auditor, including the Azure-only ones — only use it if you've configured those keys too.)
+# Or run every preset in config.LLM_PRESETS as an auditor (needs all of their keys set in .env):
+python scripts/run_imt.py --dataset human_eval --all
+```
 
 ---
 

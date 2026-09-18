@@ -392,8 +392,8 @@ def _process_one_dialogue(
 
 def _public_llm_metadata(llm_config: Dict[str, Any]) -> Dict[str, Any]:
     keys = (
-        "provider", "model_name", "deployment_name",
-        "base_url", "azure_endpoint", "api_version",
+        "provider", "model_name",
+        "base_url",
         "temperature", "max_completion_tokens",
     )
     return {k: llm_config.get(k) for k in keys if llm_config.get(k) is not None}

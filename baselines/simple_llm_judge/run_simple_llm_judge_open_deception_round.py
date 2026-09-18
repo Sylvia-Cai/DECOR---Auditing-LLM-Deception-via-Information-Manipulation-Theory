@@ -137,7 +137,7 @@ def main() -> None:
     negatives = _parse_csv_set(args.negative_labels)
 
     llm_config = get_llm_config(args.model)
-    provider = llm_config.get("provider", "azure_openai")
+    provider = llm_config.get("provider", "openai")
     llm = create_llm(llm_config)
 
     dialogues = _load_dialogues(input_path)

@@ -20,7 +20,7 @@ score-extraction step differs per family.
 
 Usage:
     python scripts/eval_baselines.py --list
-    python scripts/eval_baselines.py                                     # azure_gpt4o, all families
+    python scripts/eval_baselines.py                                     # openai_gpt4o, all families
     python scripts/eval_baselines.py --family simple_llm_judge_zeroshot --all
     python scripts/eval_baselines.py --family cot_red_handed --all
     python scripts/eval_baselines.py --family scheming_judge --all
@@ -58,7 +58,7 @@ from workflows.baseline_scores import (
     list_baseline_families, load_truth_index,
 )
 
-DEFAULT_MODEL = "azure_gpt4o"
+DEFAULT_MODEL = "openai_gpt4o"
 OUT_BASE = EVAL_RESULTS_DIR / "baselines"
 
 # Families with their own continuous-score extraction (see module docstring),
@@ -148,7 +148,7 @@ COT_SCORE_LABELS = {
 
 
 def _cot_model_name(stem: str) -> str:
-    """cot_red_handed_azure_gpt4o_run1_results -> cot_red_handed_azure_gpt4o"""
+    """cot_red_handed_openai_gpt4o_run1_results -> cot_red_handed_openai_gpt4o"""
     return re.sub(r"(_run\d+)?_results\d*$", "", stem)
 
 

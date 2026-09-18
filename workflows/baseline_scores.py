@@ -47,7 +47,7 @@ def list_baseline_families(baseline_dir: Path = BASELINE_RESULTS_DIR) -> List[st
 
 
 _PROVIDER_PREFIXES = (
-    "azure_", "google_", "openrouter_", "siliconflow_",
+    "openai_", "anthropic_", "google_", "openrouter_", "siliconflow_",
 )
 
 
@@ -59,9 +59,9 @@ def _extract_model_and_run(stem: str) -> tuple[Optional[str], Optional[int]]:
     collect tokens until we hit a trailing _run<k> suffix, which is stripped.
 
     Examples:
-      "simple_llm_judge_azure_gpt4o_run1"       -> ("azure_gpt4o", 1)
-      "simple_llm_judge_azure_gpt4o"             -> ("azure_gpt4o", None)
-      "simple_llm_judge_fewshot_azure_gpt4o_run1"-> ("azure_gpt4o", 1)
+      "simple_llm_judge_openai_gpt4o_run1"       -> ("openai_gpt4o", 1)
+      "simple_llm_judge_openai_gpt4o"             -> ("openai_gpt4o", None)
+      "simple_llm_judge_fewshot_openai_gpt4o_run1"-> ("openai_gpt4o", 1)
     """
     tokens = stem.split("_")
     start = None
